@@ -4,5 +4,7 @@ define host {
         address      <%= @address %>
         display_name <%= @display_name %>
         host_name    <%= @hostalias %>
-        hostgroups   all
+        hostgroups   all<% if @parents %>
+        parents      <%= @parents %>
+        <% end %>
 }
