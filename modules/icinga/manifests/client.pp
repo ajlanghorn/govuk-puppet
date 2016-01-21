@@ -36,10 +36,19 @@ class icinga::client {
     ],
   }
 
-  @@icinga::host { $::fqdn:
-    hostalias    => $::fqdn,
-    address      => $::ipaddress,
-    display_name => $::fqdn_short,
+  if ($::vdc == 'licensify') or ($::vdc == 'efg') or ($::vdc =~ /^*_dr$/) {
+    @@icinga::host { $::fqdn:
+      hostalias    => $::fqdn,
+      address      => $::ipaddress,
+      display_name => $::fqdn_short,
+      parents      => "vpn_gateway_${::vdc}",
+    }
+  } else {
+    @@icinga::host { $::fqdn:
+      hostalias    => $::fqdn,
+      address      => $::ipaddress,
+      display_name => $::fqdn_short,
+    }
   }
 
   Icinga::Nrpe_config <| |>
