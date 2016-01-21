@@ -853,19 +853,31 @@ monitoring::checks::smokey::features:
   check_draft_environment:
     feature: draft_environment
 
-monitoring::checks::vpn_tunnels::endpoints:
+monitoring::vpn_gateways::endpoints:
   vpn_gateway_api_dr:
-    host: "%{hiera('environment_ip_prefix')}.12.1"
+    address: "%{hiera('environment_ip_prefix')}.12.1"
+    hostalias: 'vpn_gateway_api_dr'
+    host_name: 'vpn_gateway_api_dr'
   vpn_gateway_backend_dr:
-    host: "%{hiera('environment_ip_prefix')}.11.1"
+    address: "%{hiera('environment_ip_prefix')}.11.1"
+    hostalias: 'vpn_gateway_backend_dr'
+    host_name: 'vpn_gateway_backend_dr'
   vpn_gateway_efg:
-    host: "10.4.0.1"
+    address: "10.4.0.1"
+    hostalias: 'vpn_gateway_efg'
+    host_name: 'vpn_gateway_efg'
   vpn_gateway_licensify:
-    host: "10.5.0.1"
+    address: "10.5.0.1"
+    hostalias: 'vpn_gateway_licensify'
+    host_name: 'vpn_gateway_licensify'
   vpn_gateway_redirector_dr:
-    host: "%{hiera('environment_ip_prefix')}.13.1"
+    address: "%{hiera('environment_ip_prefix')}.13.1"
+    hostalias: 'vpn_gateway_redirector_dr'
+    host_name: 'vpn_gateway_redirector_dr'
   vpn_gateway_router_dr:
-    host: "%{hiera('environment_ip_prefix')}.9.1"
+    address: "%{hiera('environment_ip_prefix')}.9.1"
+    hostalias: 'vpn_gateway_router_dr'
+    host_name: 'vpn_gateway_router_dr'
 
 nginx::package::version: '1.4.6-1ubuntu3.1'
 
