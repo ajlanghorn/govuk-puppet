@@ -100,7 +100,7 @@ ruleset\(name="cdn-giraffe"\) \{
       end
       it 'should rotate daily' do
         is_expected.to contain_file('/etc/logrotate.d/cdnlogs')
-          .with_content(/rotate 365$/)
+          .with_content(/rotate 30$/)
       end
       it { is_expected.to contain_file('/etc/logrotate.cdn_logs_hourly.conf')
             .without_content(/rotate/) }
@@ -117,7 +117,7 @@ ruleset\(name="cdn-giraffe"\) \{
         it 'should rotate the elephant logs hourly' do
           is_expected.to contain_file('/etc/logrotate.cdn_logs_hourly.conf')
             .with_content(%r{^/tmp/logs/cdn-elephant\.log$})
-            .with_content(/rotate 8760/)
+            .with_content(/rotate 720/)
         end
       end
     end

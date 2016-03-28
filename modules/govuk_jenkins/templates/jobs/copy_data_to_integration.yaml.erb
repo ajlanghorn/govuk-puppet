@@ -17,12 +17,15 @@
     properties:
         - github:
             url: https://github.gds/gds/env-sync-and-backup/
+        - inject:
+            properties-content: |
+              PARALLEL_JOBS=2
     scm:
       - env-sync-and-backup_Copy_Data_to_Integration
     logrotate:
         artifactNumToKeep: 10
     triggers:
-        - timed: 'H 5 * * 1-5'
+        - timed: 'H 4 * * 1-5'
     builders:
         - shell: |
             set -eu
@@ -60,8 +63,6 @@
     wrappers:
         - ansicolor:
             colormap: xterm
-        - inject:
-            script-content: PARALLEL_JOBS=2
     parameters:
         - choice:
             name: JOBLIST

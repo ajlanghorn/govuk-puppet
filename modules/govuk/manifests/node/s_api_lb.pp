@@ -4,6 +4,7 @@ class govuk::node::s_api_lb (
   $content_store_servers,
   $draft_content_store_servers,
   $email_campaign_api_servers,
+  $mapit_servers,
   $search_servers,
 ) {
   include govuk::node::s_base
@@ -46,10 +47,10 @@ class govuk::node::s_api_lb (
     [
       'draft-content-store',
     ]:
-      servers       => $draft_content_store_servers,
-      internal_only => true,
-      https_only    => true,
-      https_port    => 8443,
+      servers        => $draft_content_store_servers,
+      internal_only  => true,
+      https_port     => 8443,
+      https_redirect => true,
   }
   @ufw::allow { 'allow-https-8443-from-any':
     port => 8443,
@@ -60,6 +61,13 @@ class govuk::node::s_api_lb (
     internal_only => true,
   }
 
+  if !empty($mapit_servers) {
+    loadbalancer::balance { 'mapit':
+      servers       => $mapit_servers,
+      internal_only => true,
+    }
+  }
+
   loadbalancer::balance {
     [
       'rummager',
@@ -68,8 +76,8 @@ class govuk::node::s_api_lb (
       # cluster running in backend VDC.
       'search',
     ]:
-      servers       => $search_servers,
-      https_only    => false, # Necessary for the router to fetch sitemaps.
-      internal_only => true;
+      servers        => $search_servers,
+      https_redirect => false, # Necessary for the router to fetch sitemaps.
+      internal_only  => true;
   }
 }

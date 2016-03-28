@@ -27,10 +27,8 @@
 class govuk::apps::email_campaign_api(
   $port = 3110,
   $enabled = true,
-  $enable_procfile_worker = false,
+  $enable_procfile_worker = true,
   $errbit_api_key = undef,
-  $errbit_environment_name,
-  $errbit_host=undef,
   $secret_key_base = undef,
   $gov_delivery_endpoint = undef,
   $gov_delivery_code = undef,
@@ -64,7 +62,7 @@ class govuk::apps::email_campaign_api(
       enable_service => $enable_procfile_worker,
     }
 
-    govuk::logstream { 'email_campaign_api_sidekiq_json_log':
+    govuk_logging::logstream { 'email_campaign_api_sidekiq_json_log':
       logfile => '/var/apps/email-campaign-api/log/sidekiq.json.log',
       fields  => {'application' => 'email-campaign-api-sidekiq'},
       json    => true,
@@ -74,12 +72,6 @@ class govuk::apps::email_campaign_api(
       "${title}-ERRBIT_API_KEY":
           varname => 'ERRBIT_API_KEY',
           value   => $errbit_api_key;
-      "${title}-ERRBIT_ENVIRONMENT_NAME":
-          varname => 'ERRBIT_ENVIRONMENT_NAME',
-          value   => $errbit_environment_name;
-      "${title}-ERRBIT_HOST":
-          varname => 'ERRBIT_HOST',
-          value   => $errbit_host;
       "${title}-SECRET_KEY_BASE":
           varname => 'SECRET_KEY_BASE',
           value   => $secret_key_base;

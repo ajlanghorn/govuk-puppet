@@ -56,17 +56,20 @@ class mongodb::backup(
     group  => 'root',
   }
 
-  govuk::logstream { 'automongodbbackup':
+  govuk_logging::logstream { 'automongodbbackup':
     ensure  => $present,
     fields  => {'application' => 'automongodbbackup'},
     logfile => '/var/log/automongodbbackup/backup.log',
     tags    => ['backup', 'automongodbbackup', 'mongo'],
   }
 
-  file { '/etc/logrotate.d/automongodbbackup':
-    ensure  => $present,
-    source  => 'puppet:///modules/mongodb/etc/logrotate.d/automongodbbackup',
-    require => Class['logrotate'],
+  @logrotate::conf { 'automongodbbackup':
+    ensure        => $present,
+    matches       => '/var/log/automongodbbackup/backup.log',
+    days_to_keep  => '31',
+    delaycompress => true,
+    copytruncate  => false,
+    create        => '644 root root',
   }
 
   if $enabled_real {

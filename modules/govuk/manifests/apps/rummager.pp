@@ -17,28 +17,68 @@
 #   Whether to enable the procfile worker service.
 #   Default: true
 #
+# [*enable_publishing_api_document_indexer*]
+#   Whether to enable the procfile indexing service.
+#   Default: false
+#
 # [*publishing_api_bearer_token*]
 #   The bearer token to use when communicating with Publishing API.
 #   Default: undef
 #
+# [*aws_s3_key*]
+#   AWS access key for uploading API search index snapshots
+#   Default: undef
+#
+# [*aws_s3_secret*]
+#   AWS access secret for uploading API search index snapshots
+#   Default: undef
+#
+# [*rabbitmq_hosts*]
+#   RabbitMQ hosts to connect to.
+#   Default: localhost
+#
+# [*rabbitmq_user*]
+#   RabbitMQ username.
+#   Default: rummager
+#
+# [*rabbitmq_password*]
+#   RabbitMQ password.
+#   Default: rummager
+#
+# [*nagios_memory_warning*]
+#   Memory use at which Nagios should generate a warning.
+#
+# [*nagios_memory_critical*]
+#   Memory use at which Nagios should generate a critical alert.
+#
 class govuk::apps::rummager(
   $port = '3009',
   $enable_procfile_worker = true,
+  $enable_publishing_api_document_indexer = false,
   $publishing_api_bearer_token = undef,
+  $aws_s3_key = undef,
+  $aws_s3_secret = undef,
+  $aws_s3_bucket_name = undef,
+  $aws_s3_bucket_region = 'eu-west-1',
+  $rabbitmq_hosts = ['localhost'],
+  $rabbitmq_user = 'rummager',
+  $rabbitmq_password = 'rummager',
+  $nagios_memory_warning = undef,
+  $nagios_memory_critical = undef,
 ) {
   include aspell
 
   govuk::app { 'rummager':
-    app_type           => 'rack',
-    port               => $port,
-    health_check_path  => '/unified_search?q=search_healthcheck',
+    app_type               => 'rack',
+    port                   => $port,
+    health_check_path      => '/unified_search?q=search_healthcheck',
 
     # support search as an alias for ease of migration from old
     # cluster running in backend VDC.
-    vhost_aliases      => ['search'],
+    vhost_aliases          => ['search'],
 
-    log_format_is_json => true,
-    nginx_extra_config => '
+    log_format_is_json     => true,
+    nginx_extra_config     => '
     client_max_body_size 500m;
 
     location ^~ /sitemap.xml {
@@ -50,10 +90,24 @@ class govuk::apps::rummager(
       add_header Cache-Control public;
     }
     ',
+    nagios_memory_warning  => $nagios_memory_warning,
+    nagios_memory_critical => $nagios_memory_critical,
+  }
+
+  govuk::app::envvar::rabbitmq { 'rummager':
+    hosts    => $rabbitmq_hosts,
+    user     => $rabbitmq_user,
+    password => $rabbitmq_password,
   }
 
   govuk::procfile::worker { 'rummager':
     enable_service => $enable_procfile_worker,
+  }
+
+  govuk::procfile::worker { 'rummager-publishing-api-document-indexer':
+    setenv_as      => 'rummager',
+    enable_service => $enable_publishing_api_document_indexer,
+    process_type   => 'publishing-api-document-indexer',
   }
 
   Govuk::App::Envvar {
@@ -61,11 +115,20 @@ class govuk::apps::rummager(
   }
 
   govuk::app::envvar {
-    "${title}-TAXON_IMPORT_FILE":
-      varname => 'TAXON_IMPORT_FILE',
-      value   => '/data/apps/rummager/shared/alpha_taxonomy/import_dataset.csv';
     "${title}-PUBLISHING_API_BEARER_TOKEN":
       varname => 'PUBLISHING_API_BEARER_TOKEN',
       value   => $publishing_api_bearer_token;
+    "${title}-AWS_ACCESS_KEY_ID":
+      varname => 'AWS_ACCESS_KEY_ID',
+      value   => $aws_s3_key;
+    "${title}-AWS_SECRET_ACCESS_KEY":
+      varname => 'AWS_SECRET_ACCESS_KEY',
+      value   => $aws_s3_secret;
+    "${title}-AWS_BUCKET_NAME":
+      varname => 'AWS_BUCKET_NAME',
+      value   => $aws_s3_bucket_name;
+    "${title}-AWS_BUCKET_REGION":
+      varname => 'AWS_BUCKET_REGION',
+      value   => $aws_s3_bucket_region;
   }
 }

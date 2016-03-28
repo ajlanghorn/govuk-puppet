@@ -1,0 +1,3 @@
+---
+
+govuk_safe_to_reboot::can_reboot: 'overnight'

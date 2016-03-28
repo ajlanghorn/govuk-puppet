@@ -28,7 +28,7 @@ class govuk_jenkins (
 ) {
   validate_hash($config, $plugins)
 
-  include govuk::python
+  include govuk_python
   include govuk_jenkins::job_builder
   include govuk_jenkins::ssh_key
   include govuk_jenkins::config
@@ -82,9 +82,7 @@ class govuk_jenkins (
   }
 
   # Runtime dependency of: https://github.com/alphagov/search-analytics
-  package { 'libffi-dev':
-    ensure => present,
-  }
+  include libffi
 
   file { "${jenkins_home}/.gitconfig":
     source  => 'puppet:///modules/govuk_jenkins/dot-gitconfig',
@@ -98,7 +96,7 @@ class govuk_jenkins (
     location     => "http://${apt_mirror_hostname}/jenkins",
     release      => 'binary',
     architecture => $::architecture,
-    key          => '37E3ACBB',
+    key          => '3803E444EB0235822AA36A66EC5FE1A937E3ACBB',
   }
 
   class { 'jenkins':

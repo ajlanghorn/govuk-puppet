@@ -6,12 +6,13 @@
 #
 # [*vhost*]
 #   Virtual host used by the application.
+#   Default: 'government-frontend'
 #
 # [*port*]
 #   What port should the app run on?
 #
 class govuk::apps::government_frontend(
-  $vhost,
+  $vhost = 'government-frontend',
   $port = '3090',
 ) {
   Govuk::App::Envvar {
@@ -23,7 +24,7 @@ class govuk::apps::government_frontend(
     port                  => $port,
     vhost_ssl_only        => true,
     health_check_path     => '/healthcheck',
-    log_format_is_json    => true,
+    legacy_logging        => false,
     asset_pipeline        => true,
     asset_pipeline_prefix => 'government-frontend',
     vhost                 => $vhost,

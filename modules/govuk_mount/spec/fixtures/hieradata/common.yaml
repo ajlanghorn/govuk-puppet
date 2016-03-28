@@ -1,0 +1,3 @@
+app_domain: 'environment.example.com'
+
+govuk_mount::no_op: true

@@ -7,11 +7,6 @@
 #
 # === Parameters:
 #
-# [*carrenza_vcloud*]
-#   Creates an /etc/hosts entry to access the vCloud API from a
-#   whitelisted IP without requiring a VPN connection.
-#   Default: false
-#
 # [*external_licensify*]
 #   Boolean indicating whether Licensify is hosted externally to this environment.
 #
@@ -42,7 +37,6 @@
 #   Default: false
 #
 class hosts::production (
-  $carrenza_vcloud             = false,
   $external_licensify          = false,
   $ip_api_lb                   = '127.0.0.1',
   $ip_backend_lb               = '127.0.0.1',
@@ -55,8 +49,6 @@ class hosts::production (
 ) {
 
   $app_domain = hiera('app_domain')
-
-  validate_bool($carrenza_vcloud)
 
   validate_ip_address(
     $ip_api_lb,
@@ -82,17 +74,17 @@ class hosts::production (
   }
 
   #efg vdc machines
-  govuk::host { 'efg-mysql-master-1':
+  govuk_host { 'efg-mysql-master-1':
     ip             => '10.4.0.10',
     vdc            => 'efg',
     legacy_aliases => ['efg.master.mysql'],
   }
 
-  govuk::host { 'efg-frontend-1':
+  govuk_host { 'efg-frontend-1':
     ip  => '10.4.0.2',
     vdc => 'efg',
   }
-  govuk::host { 'efg-mysql-slave-1':
+  govuk_host { 'efg-mysql-slave-1':
     ip             => '10.4.0.11',
     vdc            => 'efg',
     legacy_aliases => ['efg.slave.mysql'],
@@ -126,10 +118,8 @@ class hosts::production (
     ip => '185.40.10.139',
   }
 
-  if $carrenza_vcloud{
-    host { 'vcloud-no-vpn.carrenza.com':
-      ip => '31.210.240.69',
-    }
+  host { 'vcloud-no-vpn.carrenza.com':
+    ip => '31.210.240.69',
   }
 
   if $external_licensify {

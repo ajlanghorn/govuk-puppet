@@ -9,7 +9,7 @@ class govuk::node::s_logging (
   # we want this to be a syslog server which also forwards to logstash
   class { 'rsyslog::server':
     custom_config => 'govuk/etc/rsyslog.d/server-logstash.conf.erb',
-    require       => Govuk::Mount['/srv'],
+    require       => Govuk_mount['/srv'],
   }
 
   # we want all the other machines to be able to send syslog on 514/tcp to this machine
@@ -41,10 +41,10 @@ class govuk::node::s_logging (
     provider    => 'custom',
     jarfile     => 'file:///var/tmp/logstash-1.1.9-monolithic.jar',
     installpath => '/srv/logstash',
-    initfile    => 'puppet:///modules/govuk/logstash.init.Debian',
+    initfile    => 'puppet:///modules/govuk/node/s_logging/logstash.init.Debian',
     require     => [
       Curl::Fetch['logstash-monolithic'],
-      Govuk::Mount['/srv']
+      Govuk_mount['/srv']
     ],
   }
 
@@ -64,7 +64,7 @@ class govuk::node::s_logging (
     pattern   => [ '<%{POSINT:syslog_pri}>%{SYSLOGTIMESTAMP:syslog_timestamp} %{SYSLOGHOST:syslog_hostname} %{PROG:syslog_program}(?:\[%{POSINT:syslog_pid}\])?: %{GREEDYDATA:syslog_message}' ],
     add_field => {
       'received_at'   => '%{@timestamp}',
-      'received_from' => '%{@source_host}'
+      'received_from' => '%{@source_host}',
     },
     order     => '11',
   }
@@ -84,7 +84,7 @@ class govuk::node::s_logging (
     exclude_tags => [ '_grokparsefailure' ],
     replace      => {
       '@source_host' => '%{syslog_hostname}',
-      '@message'     => '%{syslog_message}'
+      '@message'     => '%{syslog_message}',
     },
   }
   logstash::filter::mutate {'syslog-2':

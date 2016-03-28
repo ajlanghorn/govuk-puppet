@@ -21,7 +21,7 @@ class icinga::config (
 
   validate_bool($enable_event_handlers)
 
-  include govuk::htpasswd
+  include govuk_htpasswd
   include icinga::config::pingdom
   include icinga::config::smokey
 
@@ -33,11 +33,6 @@ class icinga::config (
     ensure  => directory,
     recurse => true,
     source  => 'puppet:///modules/icinga/etc/icinga',
-  }
-
-  # FIXME: Remove once this file has been purged in production
-  file { '/etc/icinga/htpasswd.users':
-    ensure  => absent,
   }
 
   file { '/etc/icinga/icinga.cfg':
@@ -83,7 +78,7 @@ class icinga::config (
   }
 
   file { '/etc/nagios-plugins/config/check_nrpe.cfg':
-    source => 'puppet:///modules/icinga/etc/nagios-plugins/config/check_nrpe.cfg'
+    source => 'puppet:///modules/icinga/etc/nagios-plugins/config/check_nrpe.cfg',
   }
 
   user { 'www-data':

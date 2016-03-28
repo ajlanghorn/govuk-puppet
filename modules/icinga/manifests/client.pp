@@ -36,12 +36,24 @@ class icinga::client {
     ],
   }
 
+  if ($::vdc == 'licensify') or ($::vdc == 'efg') or ($::vdc =~ /^*_dr$/) {
+    $parents = "vpn_gateway_${::vdc}"
+  } else {
+    $parents = undef
+  }
+
   @@icinga::host { $::fqdn:
     hostalias    => $::fqdn,
     address      => $::ipaddress,
     display_name => $::fqdn_short,
+    parents      => $parents,
   }
 
   Icinga::Nrpe_config <| |>
   Icinga::Plugin <| |>
+
+  icinga::plugin { 'reload_service':
+    source => 'puppet:///modules/monitoring/usr/lib/nagios/plugins/reload_service',
+  }
+
 }

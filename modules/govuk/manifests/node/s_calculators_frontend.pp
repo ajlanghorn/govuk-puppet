@@ -1,6 +1,6 @@
 # FIXME: This class needs better documentation as per https://docs.puppetlabs.com/guides/style_guide.html#puppet-doc
 class govuk::node::s_calculators_frontend inherits govuk::node::s_base {
-  include govuk::node::s_ruby_app_server
+  include govuk::node::s_app_server
 
   include nginx
 
@@ -19,6 +19,6 @@ class govuk::node::s_calculators_frontend inherits govuk::node::s_base {
     notes_url => monitoring_docs_url(nginx-high-conn-writing-upstream-indicator-check),
   }
 
-  Govuk::Mount['/data/vhost'] -> Class['govuk::apps::calculators']
+  Govuk_mount['/data/vhost'] -> Class['govuk::apps::calculators']
 
 }

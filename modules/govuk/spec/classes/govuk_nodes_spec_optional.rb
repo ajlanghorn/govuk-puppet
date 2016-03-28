@@ -38,9 +38,9 @@ ENV.fetch('classes').split(",").each do |class_name|
 $govuk_node_class = "#{class_name}"
 
 $lv = hiera('lv',{})
-create_resources('govuk::lvm', $lv)
+create_resources('govuk_lvm', $lv)
 $mount = hiera('mount',{})
-create_resources('govuk::mount', $mount)
+create_resources('govuk_mount', $mount)
       EOT
     }
 

@@ -11,14 +11,14 @@ define nginx::log (
   # Log name should not be absolute. Use $logpath.
   validate_re($title, '^[^/]')
 
-  govuk::logstream { $name:
+  govuk_logging::logstream { $name:
     ensure        => $logstream,
     logfile       => "${logpath}/${name}",
     tags          => ['nginx'],
     fields        => {'application' => $logname},
     json          => $json,
     statsd_metric => $statsd_metric,
-    statsd_timers => $statsd_timers
+    statsd_timers => $statsd_timers,
   }
 
 }

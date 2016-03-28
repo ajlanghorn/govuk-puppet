@@ -15,6 +15,9 @@
     properties:
         - github:
             url: https://github.gds/gds/env-sync-and-backup/
+        - inject:
+            properties-content: |
+              PARALLEL_JOBS=2
     scm:
       - env-sync-and-backup_Copy_Licensify_Data_to_Staging
     logrotate:
@@ -29,7 +32,7 @@
             set +e
 
             echo "Disabling Gor traffic replay"
-            for box in $(govuk_node_list -C 'govuk::gor'); do
+            for box in $(govuk_node_list -C 'govuk_gor'); do
               ssh deploy@${box} 'echo "true" > /etc/govuk/env.d/FACTER_data_sync_in_progress; sudo initctl stop gor';
             done
 
@@ -38,7 +41,7 @@
             EXITCODE=$?
 
             echo "Re-enabling Gor traffic replay"
-            for box in $(govuk_node_list -C 'govuk::gor'); do
+            for box in $(govuk_node_list -C 'govuk_gor'); do
               ssh deploy@${box} 'echo "" > /etc/govuk/env.d/FACTER_data_sync_in_progress; sudo initctl start gor';
             done
 
@@ -58,8 +61,6 @@
     wrappers:
         - ansicolor:
             colormap: xterm
-        - inject:
-            script-content: PARALLEL_JOBS=2
     parameters:
         - choice:
             name: JOBLIST

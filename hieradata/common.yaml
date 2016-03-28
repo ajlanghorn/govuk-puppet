@@ -3,6 +3,84 @@ HIERA_SAFETY_CHECK: true
 
 app_domain: 'dev.gov.uk'
 
+deployable_applications: &deployable_applications
+  - asset-manager
+  - authenticating-proxy
+  - backdrop-read
+  - backdrop-write
+  - bouncer
+  - business-support-api
+  - businesssupportfinder
+  - calculators
+  - calendars
+  - collections
+  - collections-publisher
+  - contacts
+  - contacts-frontend
+  - content-register
+  - content-store
+  - content-tagger
+  - courts-api
+  - courts-frontend
+  - designprinciples
+  - EFG
+  - email-alert-api
+  - email-alert-frontend
+  - email-alert-monitor
+  - email-alert-service
+  - email-campaign-api
+  - email-campaign-frontend
+  - errbit
+  - feedback
+  - finder-frontend
+  - frontend
+  - government-frontend
+  - govuk-delivery
+  - govuk_content_api
+  - govuk_need_api
+  - hmrc-manuals-api
+  - imminence
+  - info-frontend
+  - kibana-gds
+  - licence-finder
+  - manuals-frontend
+  - mapit
+  - maslow
+  - metadata-api
+  - multipage-frontend
+  - panopticon
+  - performanceplatform-admin
+  - performanceplatform-big-screen-view
+  - policy-publisher
+  - publisher
+  - publishing-api
+  - recommended-links
+  - release
+  - router
+  - router-api
+  - rummager
+  - search-admin
+  - service-manual-publisher
+  - share-sale-publisher
+  - short-url-manager
+  - sidekiq-monitoring
+  - signonotron2
+  - smartanswers
+  - smokey
+  - specialist-frontend
+  - specialist-publisher
+  - spotlight
+  - stagecraft
+  - static
+  - support
+  - support-api
+  - trade-tariff-admin
+  - trade-tariff-backend
+  - trade-tariff-frontend
+  - transition
+  - travel-advice-publisher
+  - whitehall
+
 apt_mirror_hostname: 'apt.production.alphagov.co.uk'
 
 apt::apt_update_frequency: 'daily'
@@ -79,6 +157,12 @@ backup::offsite::jobs:
     hour: 8,
     minute: 13,
     # No encryption because of size and sensitivity
+  'govuk-cdn-logs':
+    sources: "/data/backups/logs-cdn-1.management.%{hiera('app_domain')}/*"
+    destination: "rsync://%{hiera('backup::offsite::dest_host')}//srv/backup-cdn-logs/"
+    hour: 7,
+    minute: 12,
+    # CDN logs are backed up unencrypted because they don't contain any sensitive information
 
 base::packages::gems:
   ruby-shadow:
@@ -115,6 +199,7 @@ base::packages::packages:
   - 'tcpdump'
   - 'tmux'
   - 'tree'
+  - 'update-notifier-common'
   - 'unzip'
   - 'vim-nox'
   - 'xz-utils'
@@ -153,6 +238,11 @@ govuk::apps::backdrop_read::enabled: true
 govuk::apps::backdrop_write::enabled: true
 
 govuk::apps::bouncer::db_hostname: "transition-postgresql-slave-1.backend"
+govuk::apps::bouncer::nagios_memory_warning: 1400
+govuk::apps::bouncer::nagios_memory_critical: 1500
+
+govuk::apps::contentapi::nagios_memory_warning: 3800
+govuk::apps::contentapi::nagios_memory_critical: 4000
 
 govuk::apps::content_register::db::backend_ip_range: "%{hiera('environment_ip_prefix')}.3.0/24"
 govuk::apps::content_register::rabbitmq_hosts:
@@ -160,29 +250,43 @@ govuk::apps::content_register::rabbitmq_hosts:
   - rabbitmq-2.backend
   - rabbitmq-3.backend
 
+govuk::apps::content_store::nagios_memory_warning: 800
+govuk::apps::content_store::nagios_memory_critical: 900
+
 govuk::apps::content_tagger::db_hostname: "postgresql-primary-1.backend"
 govuk::apps::content_tagger::db::backend_ip_range: "%{hiera('environment_ip_prefix')}.3.0/24"
 
 govuk::apps::efg::vhost_name: "www.sflg.gov.uk"
+govuk::apps::efg::nagios_memory_warning: 1600
+govuk::apps::efg::nagios_memory_critical: 1800
 
 govuk::apps::email_alert_api::enabled: true
 govuk::apps::email_alert_api::db::backend_ip_range: "%{hiera('environment_ip_prefix')}.3.0/24"
 
-govuk::apps::email_campaign_api::errbit_environment_name: "%{hiera('govuk::deploy::config::errbit_environment_name')}"
-govuk::apps::email_campaign_api::errbit_host: "https://errbit.%{hiera('app_domain')}"
 govuk::apps::email_campaign_api::mongodb_nodes:
   - 'email-campaign-mongo-1.api'
   - 'email-campaign-mongo-2.api'
   - 'email-campaign-mongo-3.api'
-
-govuk::apps::email_alert_monitor::db::backend_ip_range: "%{hiera('environment_ip_prefix')}.3.0/24"
 
 govuk::apps::email_alert_service::rabbitmq_hosts:
   - rabbitmq-1.backend
   - rabbitmq-2.backend
   - rabbitmq-3.backend
 
+govuk::apps::email_campaign_frontend::nagios_memory_warning: 1000
+govuk::apps::email_campaign_frontend::nagios_memory_critical: 1100
+
+govuk::apps::errbit::nagios_memory_warning: 2600
+govuk::apps::errbit::nagios_memory_critical: 3000
+
 govuk::apps::finder_frontend::enabled: true
+govuk::apps::finder_frontend::nagios_memory_warning: 2000
+govuk::apps::finder_frontend::nagios_memory_critical: 2500
+
+govuk::apps::frontend::nagios_memory_warning: 1200
+govuk::apps::frontend::nagios_memory_critical: 1400
+
+govuk::apps::govuk_cdn_logs_monitor::processed_data_dir: '/mnt/logs_cdn/data'
 
 govuk::apps::govuk_crawler_worker::airbrake_endpoint: "https://errbit.%{hiera('app_domain')}/notifier_api/v2/notices"
 govuk::apps::govuk_crawler_worker::airbrake_env: "%{hiera('govuk::deploy::config::errbit_environment_name')}"
@@ -207,8 +311,11 @@ govuk::apps::imminence::mongodb_nodes:
   - 'mongo-1.backend'
   - 'mongo-2.backend'
   - 'mongo-3.backend'
+govuk::apps::imminence::nagios_memory_warning: 1200
+govuk::apps::imminence::nagios_memory_critical: 1400
 
 govuk::apps::info_frontend::enabled: true
+govuk::apps::mapit::enabled: true
 govuk::apps::metadata_api::enabled: true
 
 govuk::apps::need_api::mongodb_nodes:
@@ -217,6 +324,11 @@ govuk::apps::need_api::mongodb_nodes:
   - 'mongo-3.backend'
 
 govuk::apps::panopticon::rabbitmq_hosts:
+  - rabbitmq-1.backend
+  - rabbitmq-2.backend
+  - rabbitmq-3.backend
+
+govuk::apps::rummager::rabbitmq_hosts:
   - rabbitmq-1.backend
   - rabbitmq-2.backend
   - rabbitmq-3.backend
@@ -237,14 +349,37 @@ govuk::apps::publishing_api::draft_content_store: "https://draft-content-store.%
 govuk::apps::publishing_api::redis_host: 'redis-1.backend'
 govuk::apps::publishing_api::db::backend_ip_range: "%{hiera('environment_ip_prefix')}.3.0/24"
 
+govuk::apps::rummager::nagios_memory_warning: 4600
+govuk::apps::rummager::nagios_memory_critical: 4900
+
+govuk::apps::service_manual_publisher::http_username: "%{hiera('http_username')}"
+govuk::apps::service_manual_publisher::http_password: "%{hiera('http_password')}"
+
 govuk::apps::service_manual_publisher::db::backend_ip_range: "%{hiera('environment_ip_prefix')}.3.0/24"
 
+govuk::apps::share_sale_publisher::enabled: true
+
 govuk::apps::signon::redis_url: "redis://redis-1.backend:6379/0"
+govuk::apps::signon::nagios_memory_warning: 900
+govuk::apps::signon::nagios_memory_critical: 1000
+
 govuk::apps::specialist_frontend::enabled: true
+govuk::apps::specialist_frontend::nagios_memory_warning: 2000
+govuk::apps::specialist_frontend::nagios_memory_critical: 2200
+
 govuk::apps::specialist_publisher::enabled: true
+govuk::apps::specialist_publisher::nagios_memory_warning: 800
+govuk::apps::specialist_publisher::nagios_memory_critical: 900
+
 govuk::apps::spotlight::enabled: true
 govuk::apps::spotlight::alert_5xx_warning_rate: 0.2
 govuk::apps::spotlight::alert_5xx_critical_rate: 0.3
+govuk::apps::spotlight::nagios_memory_warning: 2000
+govuk::apps::spotlight::nagios_memory_critical: 2200
+
+govuk::apps::smartanswers::nagios_memory_warning: 4000
+govuk::apps::smartanswers::nagios_memory_critical: 45000
+
 govuk::apps::stagecraft::enabled: true
 govuk::apps::stagecraft::worker::enabled: true
 govuk::apps::stagecraft::beat::enabled: true
@@ -253,12 +388,18 @@ govuk::apps::stagecraft::postgresql_db::api_ip_range: "%{hiera('environment_ip_p
 
 govuk::apps::support_api::db::backend_ip_range: "%{hiera('environment_ip_prefix')}.3.0/24"
 
+govuk::apps::tariff::nagios_memory_warning: 3200
+govuk::apps::tariff::nagios_memory_critical: 3600
+
+govuk::apps::tariff_api::nagios_memory_warning: 1800
+govuk::apps::tariff_api::nagios_memory_critical: 2000
+
 govuk::apps::transition::postgresql_db::backend_ip_range: "%{hiera('environment_ip_prefix')}.3.0/24"
 
 govuk::deploy::config::asset_root: "https://%{hiera('router::assets_origin::vhost_name')}"
 govuk::deploy::config::website_root: "https://www-origin.%{hiera('app_domain')}"
 
-govuk::htpasswd::http_username: "%{hiera('http_username')}"
+govuk_htpasswd::http_username: "%{hiera('http_username')}"
 
 govuk::node::s_api_redis::allowed_api_ip_range: "%{hiera('environment_ip_prefix')}.4.0/24"
 govuk::node::s_api_redis::allowed_backend_ip_range: "%{hiera('environment_ip_prefix')}.3.0/24"
@@ -267,9 +408,9 @@ govuk::node::s_asset_base::firewall_allow_ip_range: 10.3.0.0/16
 
 govuk::node::s_transition_postgresql_slave::redirector_ip_range: 10.6.0.1/16
 
-govuk::ppa::apt_mirror_hostname: "%{hiera('apt_mirror_hostname')}"
+govuk_ppa::apt_mirror_hostname: "%{hiera('apt_mirror_hostname')}"
 
-govuk::sshkeys::deployment_keys:
+govuk_sshkeys::deployment_keys:
   github.com:
     key: 'AAAAB3NzaC1yc2EAAAABIwAAAQEAq2A7hRGmdnm9tUDbO9IDSwBK6TbQa+PXYPCPy6rbTrTtw7PHkccKrpp0yVhp5HdEIcKr6pLlVDBfOLX9QUsyCOV0wzfjIJNlGEYsdlLJizHhbn2mUjvSAHQqZETYP81eFzLQNnPHt4EVVUh7VfDESU84KezmD5QlWpXLmvU31/yMf+Se8xhHTvKSCZIFImWwoG6mbUoWf9nzpIoaSjB+weqqUUmpaaasXVal72J+UX2B+2RPW3RcT0eOzQgqlJL3RKrTJvdsjE3JEAvGq3lGHSZXy28G3skua2SmVi/w4yCE6gbODqnTWlg7+wC604ydGXA8VJiS5ap43JXiUFFAaQ=='
   github.gds:
@@ -321,6 +462,22 @@ govuk_jenkins::config::github_api_uri: "%{hiera('govuk_jenkins::config::github_w
 govuk_jenkins::config::github_web_uri: "https://%{hiera('govuk_jenkins::github_enterprise_hostname')}"
 govuk_jenkins::job::deploy_app::app_domain: "%{hiera('app_domain')}"
 
+govuk_jenkins::job::smokey::auth_username: "%{hiera('http_username')}"
+govuk_jenkins::job::smokey::auth_password: "%{hiera('http_password')}"
+govuk_jenkins::job::smokey::smokey_bearer_token: "%{hiera('smokey_bearer_token')}"
+govuk_jenkins::job::smokey::signon_email: "%{hiera('smokey_signon_email')}"
+govuk_jenkins::job::smokey::signon_password: "%{hiera('smokey_signon_password')}"
+
+govuk_jenkins::job::run_rake_task::applications: *deployable_applications
+govuk_jenkins::job::deploy_app::applications: *deployable_applications
+
+govuk_jenkins::job::deploy_terraform_project::projects:
+  - base_aws_infrastructure
+  - dev_vm
+  - elasticsearch_snapshots
+  - uktt_data
+  - wal-e_backups
+
 govuk_mysql::server::expire_log_days: 3
 govuk_mysql::server::monitoring::master::plaintext_mysql_password: "%{hiera('mysql_nagios')}"
 govuk_mysql::server::monitoring::slave::plaintext_mysql_password: "%{hiera('mysql_nagios')}"
@@ -337,11 +494,14 @@ govuk_sudo::sudo_conf:
   deploy_service_varnish:
     content: 'deploy ALL=NOPASSWD:/etc/init.d/varnish'
   icinga_init_ctl:
-    content: 'nagios ALL=NOPASSWD:/sbin/initctl reload'
+    content: 'nagios ALL=NOPASSWD:/sbin/initctl reload *'
   ubuntu:
     content: 'ubuntu ALL=(ALL) NOPASSWD:ALL'
 
 govuk_unattended_reboot::enabled: true
+govuk_unattended_reboot::mongodb::enabled: true
+govuk_unattended_reboot::elasticsearch::enabled: true
+
 govuk_unattended_reboot::monitoring_basic_auth:
   username: "%{hiera('http_username')}"
   password: "%{hiera('http_password')}"
@@ -406,6 +566,8 @@ hosts::production::api::hosts:
     ip: '10.1.4.53'
   mapit-1:
     ip: '10.1.4.60'
+  mapit-2:
+    ip: '10.1.4.61'
   performance-mongo-1:
     ip: '10.1.4.31'
   performance-mongo-2:
@@ -556,7 +718,6 @@ hosts::production::backend::app_hostnames:
   - 'content-register'
   - 'contentapi'
   - 'email-alert-api'
-  - 'email-alert-monitor'
   - 'errbit'
   - 'event-store'
   - 'govuk-delivery'
@@ -574,6 +735,7 @@ hosts::production::backend::app_hostnames:
   - 'publishing-api'
   - 'search-admin'
   - 'service-manual-publisher'
+  - 'share-sale-publisher'
   - 'short-url-manager'
   - 'signon'
   - 'specialist-publisher'
@@ -594,6 +756,10 @@ hosts::production::frontend::hosts:
     ip: '10.1.2.2'
   frontend-2:
     ip: '10.1.2.3'
+  draft-email-campaign-frontend-1:
+    ip: '10.1.2.202'
+  draft-email-campaign-frontend-2:
+    ip: '10.1.2.203'
   draft-frontend-1:
     ip: '10.1.2.200'
   draft-frontend-2:
@@ -629,6 +795,7 @@ hosts::production::frontend::app_hostnames:
   - 'draft-collections'
   - 'draft-contacts-frontend'
   - 'draft-email-alert-frontend'
+  - 'draft-email-campaign-frontend'
   - 'draft-government-frontend'
   - 'draft-manuals-frontend'
   - 'draft-specialist-frontend'
@@ -853,21 +1020,21 @@ monitoring::checks::smokey::features:
   check_draft_environment:
     feature: draft_environment
 
-monitoring::checks::vpn_tunnels::endpoints:
+monitoring::vpn_gateways::endpoints:
   vpn_gateway_api_dr:
-    host: "%{hiera('environment_ip_prefix')}.12.1"
+    address: "%{hiera('environment_ip_prefix')}.12.1"
   vpn_gateway_backend_dr:
-    host: "%{hiera('environment_ip_prefix')}.11.1"
+    address: "%{hiera('environment_ip_prefix')}.11.1"
   vpn_gateway_efg:
-    host: "10.4.0.1"
+    address: "10.4.0.1"
   vpn_gateway_licensify:
-    host: "10.5.0.1"
+    address: "10.5.0.1"
   vpn_gateway_redirector_dr:
-    host: "%{hiera('environment_ip_prefix')}.13.1"
+    address: "%{hiera('environment_ip_prefix')}.13.1"
   vpn_gateway_router_dr:
-    host: "%{hiera('environment_ip_prefix')}.9.1"
+    address: "%{hiera('environment_ip_prefix')}.9.1"
 
-nginx::package::version: '1.4.6-1ubuntu3.1'
+nginx::package::version: '1.4.6-1ubuntu3.4'
 
 nodejs::version: '0.10.37-1chl1~%{::lsbdistcodename}1'
 
@@ -885,6 +1052,7 @@ postgresql_slave_addresses_dr: "%{hiera('environment_ip_prefix')}.11.13/32"
 postgresql_transition_slave_addresses_live: "%{hiera('environment_ip_prefix')}.3.61/32"
 postgresql_transition_slave_addresses_dr: "%{hiera('environment_ip_prefix')}.11.61/32"
 
+postgresql::lib::devel::link_pg_config: false
 postgresql::globals::version: '9.3'
 
 puppet::master::puppetdb_version: '2.0.0-1puppetlabs1'

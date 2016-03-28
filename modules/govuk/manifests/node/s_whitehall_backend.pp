@@ -3,20 +3,16 @@ class govuk::node::s_whitehall_backend (
   $sync_mirror = false
 ) inherits govuk::node::s_base {
 
-  include govuk::node::s_ruby_app_server
+  include govuk::node::s_app_server
   include nginx
 
   include imagemagick
 
   class { 'govuk::apps::whitehall':
-    configure_admin        => true,
-    port                   => 3026,
-    vhost_protected        => true,
-    vhost                  => 'whitehall-admin',
-    # 5GB for a warning
-    nagios_memory_warning  => 5368709120,
-    # 6GB for a critical
-    nagios_memory_critical => 6442450944,
+    configure_admin => true,
+    port            => 3026,
+    vhost_protected => true,
+    vhost           => 'whitehall-admin',
   }
 
   # If we miss all the apps, throw a 500 to be caught by the cache nginx

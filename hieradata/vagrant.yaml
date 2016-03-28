@@ -23,7 +23,6 @@ assets::ssh_private_key::key: |
 
 base::supported_kernel::enabled: true
 
-govuk::apps::mapit::enabled: true
 govuk::apps::stagecraft::enabled: true
 govuk::apps::stagecraft::worker::enabled: true
 govuk::apps::stagecraft::beat::enabled: true
@@ -34,9 +33,9 @@ govuk::deploy::config::errbit_environment_name: 'vagrant'
 govuk::deploy::config::asset_root: 'http://static.dev.gov.uk'
 govuk::deploy::config::website_root: 'http://www.dev.gov.uk'
 
-govuk::lvm::no_op: true
+govuk_lvm::no_op: true
 
-govuk::mount::no_op: true
+govuk_mount::no_op: true
 
 govuk::node::s_api_lb::api_servers:
   - "api-1.api"
@@ -45,11 +44,13 @@ govuk::node::s_api_lb::content_store_servers:
   - "content-store-1.api"
   - "content-store-2.api"
 govuk::node::s_api_lb::draft_content_store_servers:
-- "draft-content-store-1.api"
-- "draft-content-store-2.api"
+  - "draft-content-store-1.api"
+  - "draft-content-store-2.api"
 govuk::node::s_api_lb::email_campaign_api_servers:
   - "email-campaign-api-1.api"
   - "email-campaign-api-2.api"
+govuk::node::s_api_lb::mapit_servers:
+  - "mapit-1.api"
 govuk::node::s_api_lb::search_servers:
   - "search-1.api"
   - "search-2.api"
@@ -72,6 +73,9 @@ govuk::node::s_cache::real_ip_header: 'X-Forwarded-For'
 govuk::node::s_frontend_lb::calculators_frontend_servers:
   - 'calculators-frontend-1.frontend'
   - 'calculators-frontend-2.frontend'
+govuk::node::s_frontend_lb::draft_email_campaign_frontend_servers:
+  - 'draft-email-campaign-frontend-1.frontend'
+  - 'draft-email-campaign-frontend-2.frontend'
 govuk::node::s_frontend_lb::draft_frontend_servers:
   - 'draft-frontend-1.frontend'
   - 'draft-frontend-2.frontend'
@@ -101,14 +105,15 @@ govuk::node::s_licensify_mongo::mongodb_backup_disk: '/dev/sdb1'
 
 govuk::node::s_transition_postgresql_slave::redirector_ip_range: '127.0.0.1'
 
-govuk_jenkins::job_builder::manage_jobs: true
 govuk_jenkins::job_builder::jobs:
   - govuk_jenkins::job::data_sync_complete_staging
   - govuk_jenkins::job::deploy_app
+  - govuk_jenkins::job::run_rake_task
   - govuk_jenkins::job::deploy_cdn
   - govuk_jenkins::job::deploy_licensify
   - govuk_jenkins::job::deploy_puppet
   - govuk_jenkins::job::deploy_router_data
+  - govuk_jenkins::job::deploy_terraform_project
   - govuk_jenkins::job::govuk_cdn_nightly_2xx_status_collection
   - govuk_jenkins::job::launch_vms
   - govuk_jenkins::job::network_config_deploy
@@ -118,12 +123,12 @@ govuk_jenkins::job_builder::jobs:
   - govuk_jenkins::job::service_manual_rebuild_search_index
   - govuk_jenkins::job::smokey
   - govuk_jenkins::job::smokey_deploy
+  - govuk_jenkins::job::update_cdn_dictionaries
 govuk_jenkins::job_builder::environment: 'dev'
 
 govuk_jenkins::job::network_config_deploy::environments:
   - foo
 
-govuk_postgresql::monitoring::user: nagios
 govuk_postgresql::monitoring::password: password
 
 govuk_postgresql::server::snakeoil_ssl_certificate: |
@@ -151,6 +156,8 @@ govuk_postgresql::server::snakeoil_ssl_key: |
   Fx9VwMs9+HXEJQIhANlG73Q7ps3R/Jd/c62vVz86LceafG0C/iCY2ptEBjFRAiA2
   vxBODhF5cvyO/S2jUuvApGU4dU2KULT5Dv3/Lh/Otg==
   -----END RSA PRIVATE KEY-----
+
+govuk_postgresql::wal_e::backup::enabled: true
 
 icinga::config::enable_event_handlers: true
 icinga::nginx::enable_basic_auth: false

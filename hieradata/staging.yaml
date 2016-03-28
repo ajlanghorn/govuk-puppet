@@ -1,18 +1,21 @@
 ---
 app_domain: 'staging.publishing.service.gov.uk'
 
+backup::server::backup_hour: 8
+
 base::supported_kernel::enabled: true
+
+cron::daily_hour: 6
 
 environment_ip_prefix: '10.2'
 
 govuk::apps::content_register::db::backend_ip_range: '10.2.3.0/24'
 govuk::apps::email_alert_api::db::backend_ip_range: '10.2.3.0/24'
-govuk::apps::email_alert_monitor::db::backend_ip_range: '10.2.3.0/24'
 govuk::apps::errbit::errbit_email_from: 'govuk-winston+errbit-staging@digital.cabinet-office.gov.uk'
 govuk::apps::hmrc_manuals_api::publish_topics: false
-govuk::apps::panopticon::enable_procfile_worker: false
 govuk::apps::publicapi::backdrop_host: 'www.staging.performance.service.gov.uk'
 govuk::apps::sidekiq_monitoring::enabled: true
+govuk::apps::travel_advice_publisher::enable_email_alerts: true
 
 govuk::deploy::aws_ses_smtp_host: 'email-smtp.eu-west-1.amazonaws.com'
 govuk::deploy::config::errbit_environment_name: 'staging'
@@ -27,7 +30,6 @@ govuk_jenkins::config::banner_colour_text: 'black'
 govuk_jenkins::config::banner_string: 'Carrenza STAGING'
 govuk_jenkins::config::manage_config: true
 
-govuk_jenkins::job_builder::manage_jobs: true
 govuk_jenkins::job_builder::jobs:
   - govuk_jenkins::job::data_sync_complete_staging
   - govuk_jenkins::job::deploy_app
@@ -40,11 +42,13 @@ govuk_jenkins::job_builder::jobs:
   - govuk_jenkins::job::network_config_deploy
   - govuk_jenkins::job::passive_checks
   - govuk_jenkins::job::performance_platform_smokey
+  - govuk_jenkins::job::run_rake_task
   - govuk_jenkins::job::run_whitehall_data_migrations
   - govuk_jenkins::job::service_manual_rebuild_search_index
   - govuk_jenkins::job::smokey
   - govuk_jenkins::job::smokey_deploy
   - govuk_jenkins::job::tagging_migration_check
+  - govuk_jenkins::job::update_cdn_dictionaries
 
 govuk_jenkins::job_builder::environment: 'staging'
 
@@ -65,7 +69,6 @@ govuk_jenkins::job::data_sync_complete_staging::pp_signon_domain_new: staging.pe
 govuk_jenkins::ssh_key::public_key: 'AAAAB3NzaC1yc2EAAAADAQABAAACAQDCtuq8uMfbwh7asChk/F/VD5gPnnBD7pLeN1W4iOrkq3KbzdLErzK3W0EpCA2C07JU55egolaO7lDUF6MtmAiGLfHApju5lZ6ziUq+zebEbkwtpLUNop2zp51pZl5/meMEF9pQEcHD46iZGs1sLuZGNzzu12PKvpAHDFK9GPHrYez7asKh4JVCi5DNusOMFUFE+BW8w37zJZ4ksdeZ58w1PTS8+Q65k6MQdWDAUr9BLcsacZ2kzRHsMxP3bd3lljY9HT0lh1qPgwRcWqbfVjB8dAzTxiQHJm0w3xywcx/IUKMSL1WCJV7rZ5nt0XgOfU/cGRXDtRHPvMMrMfKqFGbyTTCjix4Y0k1FD2udXxvv03GjL12qohrsb1JxFv5CdLbV8Yn96IDIjEVKA+1GIwxl0w4TtMVCLqImIMaTD00tdY58fAb2uIy9xSTxu2jKdsEKCcbbC9ipE5lUM/3/kgl06OljBwgAcLgsbbWAHip59E3l6xO+BmW7f7PeepZMRDr15Xwr4RiEu76SQPoRFM5honi7yPLTNwscEgxEjZgKjOkNfVeABeJhJ5rOElAYx7K1bIsW/93DXtTWPDMxGGkiTM279Evy0LJjdVu6XGDmd9qw8usdKjfjASHe9mMFfSXZflHA6VW2o1Zjo40KWHXxJSdPN4bTujpahjd8QOb6Sw=='
 
 govuk_mysql::server::expire_log_days: 1
-govuk_mysql::server::innodb_file_per_table: true
 govuk_mysql::server::slow_query_log: true
 
 govuk::node::s_api_lb::api_servers:
@@ -76,18 +79,22 @@ govuk::node::s_api_lb::content_store_servers:
   - "content-store-2.api"
   - "content-store-3.api"
 govuk::node::s_api_lb::draft_content_store_servers:
-- "draft-content-store-1.api"
-- "draft-content-store-2.api"
+  - "draft-content-store-1.api"
+  - "draft-content-store-2.api"
 govuk::node::s_api_lb::email_campaign_api_servers:
   - "email-campaign-api-1.api"
   - "email-campaign-api-2.api"
   - "email-campaign-api-3.api"
+govuk::node::s_api_lb::mapit_servers:
+  - "mapit-1.api"
+  - "mapit-2.api"
 govuk::node::s_api_lb::search_servers:
   - "search-1.api"
   - "search-2.api"
   - "search-3.api"
 
 govuk::node::s_asset_base::firewall_allow_ip_range: '10.2.3.0/24'
+govuk::node::s_asset_master::copy_attachments_hour: 7
 govuk::node::s_backend_lb::backend_servers:
   - 'backend-1.backend'
   - 'backend-2.backend'
@@ -109,6 +116,9 @@ govuk::node::s_frontend_lb::calculators_frontend_servers:
   - 'calculators-frontend-1.frontend'
   - 'calculators-frontend-2.frontend'
   - 'calculators-frontend-3.frontend'
+govuk::node::s_frontend_lb::draft_email_campaign_frontend_servers:
+  - 'draft-email-campaign-frontend-1.frontend'
+  - 'draft-email-campaign-frontend-2.frontend'
 govuk::node::s_frontend_lb::draft_frontend_servers:
   - 'draft-frontend-1.frontend'
   - 'draft-frontend-2.frontend'
@@ -148,7 +158,6 @@ govuk::node::s_transition_postgresql_slave::redirector_ip_range: '10.2.5.0/24'
 
 grafana::dashboards::machine_suffix_metrics: '_staging'
 
-hosts::production::carrenza_vcloud: true
 hosts::production::ip_api_lb: '10.2.4.254'
 hosts::production::ip_backend_lb: '10.2.3.254'
 hosts::production::ip_bouncer: '37.26.91.5'
@@ -213,6 +222,10 @@ hosts::production::api::hosts:
     ip: '10.2.4.54'
   email-campaign-mongo-3:
     ip: '10.2.4.55'
+  mapit-1:
+    ip: '10.2.4.60'
+  mapit-2:
+    ip: '10.2.4.61'
   performance-mongo-1:
     ip: '10.2.4.31'
   performance-mongo-2:
@@ -362,6 +375,10 @@ hosts::production::frontend::hosts:
     ip: '10.2.2.3'
   frontend-3:
     ip: '10.2.2.4'
+  draft-email-campaign-frontend-1:
+    ip: '10.2.2.202'
+  draft-email-campaign-frontend-2:
+    ip: '10.2.2.203'
   draft-frontend-1:
     ip: '10.2.2.200'
   draft-frontend-2:
@@ -513,10 +530,8 @@ icinga::nginx::enable_basic_auth: false
 #Do not enable this without speaking to Brad first
 licensify::apps::licensing_web_forms::enabled: false
 
+monitoring::checks::enable_support_check: false
 monitoring::checks::ses::region: eu-west-1
-
-# FIXME: Remove this line to enable after testing completed in Integration
-monitoring::checks::vpn_tunnels::enabled: false
 
 postfix::smarthost:
 - 'email-smtp.us-east-1.amazonaws.com:587'

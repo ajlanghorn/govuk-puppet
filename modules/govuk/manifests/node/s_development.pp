@@ -11,29 +11,24 @@ class govuk::node::s_development (
   $apps = [],
 ) {
   include base
-  include resolvconf
 
   include assets::user
   include golang
   include govuk_apt::disable_pipelining
   include govuk_mysql::libdev
+  include govuk_rabbitmq
   include hosts::development
   include imagemagick
+  include last_puppet_run
   include memcached
   include mongodb::server
   include mysql::client
   include nodejs
-  include puppet
-  include govuk_rabbitmq
   include redis
   include tmpreaper
-  include users
 
-  include govuk::deploy
-  include govuk::envsys
-  include govuk::python
-  include govuk::testing_tools
-  include govuk::sshkeys
+  include govuk_python
+  include govuk_testing_tools
 
   include govuk_rbenv::all
 
@@ -51,7 +46,7 @@ class govuk::node::s_development (
 
   class { 'govuk_elasticsearch':
     cluster_name       => 'govuk-development',
-    heap_size          => '256m',
+    heap_size          => '1024m',
     number_of_shards   => '1',
     number_of_replicas => '0',
     require            => Class['govuk_java::set_defaults'],
@@ -155,7 +150,6 @@ class govuk::node::s_development (
 
   package {
     'sqlite3':        ensure => 'installed'; # gds-sso uses sqlite3 to run its test suite
-    'wbritish-small': ensure => installed;
     'vegeta':         ensure => installed; # vegeta is used by the router test suite
     'mawk-1.3.4':     ensure => installed; # Provides /opt/mawk required by pre-transition-stats
   }

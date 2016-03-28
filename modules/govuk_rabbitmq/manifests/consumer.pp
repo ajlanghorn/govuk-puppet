@@ -6,9 +6,6 @@
 #
 # === Parameters
 #
-# [*namevar*]
-#   The RabbitMQ username
-#
 # [*amqp_pass*]
 #   The RabbitMQ password
 #
@@ -28,31 +25,55 @@
 #   The type of exchange to create if create_exchange is set.
 #   (default: 'topic')
 #
+# [*ensure*]
+#   Determines whether to create or delete the consumer.
+#   (default: ensure)
+#
 define govuk_rabbitmq::consumer (
   $amqp_pass,
   $amqp_exchange,
   $amqp_queue,
   $is_test_exchange = false,
   $exchange_type = 'topic',
+  $ensure = present,
 ) {
-  $amqp_user = $title
+  validate_re($ensure, '^(present|absent)$', '$ensure must be "present" or "absent"')
 
-  rabbitmq_user { $amqp_user:
-    password => $amqp_pass,
-  }
+  $amqp_user = $title
 
   if $is_test_exchange {
     govuk_rabbitmq::exchange { "${amqp_exchange}@/":
-      type     => $exchange_type,
+      ensure => $ensure,
+      type   => $exchange_type,
     }
     $write_permission = "^(amq\\.gen.*|${amqp_queue}|${amqp_exchange})$"
   } else {
     $write_permission = "^(amq\\.gen.*|${amqp_queue})$"
   }
 
-  rabbitmq_user_permissions { "${amqp_user}@/":
-    configure_permission => "^(amq\\.gen.*|${amqp_queue})$",
-    write_permission     => $write_permission,
-    read_permission      => "^(amq\\.gen.*|${amqp_queue}|${amqp_exchange})$",
+  if $ensure == present {
+    rabbitmq_user { $amqp_user:
+      ensure   => present,
+      password => $amqp_pass,
+    } ->
+    rabbitmq_user_permissions { "${amqp_user}@/":
+      ensure               => present,
+      configure_permission => "^(amq\\.gen.*|${amqp_queue})$",
+      write_permission     => $write_permission,
+      read_permission      => "^(amq\\.gen.*|${amqp_queue}|${amqp_exchange})$",
+    }
+  } else {
+    rabbitmq_user_permissions { "${amqp_user}@/":
+      ensure => absent,
+    } ->
+    rabbitmq_user { $amqp_user:
+      ensure   => absent,
+    }
+  }
+
+  govuk_rabbitmq::monitor_consumers {"${title}_consumer_monitoring":
+    ensure            => $ensure,
+    rabbitmq_hostname => 'localhost',
+    rabbitmq_queue    => $amqp_queue,
   }
 }

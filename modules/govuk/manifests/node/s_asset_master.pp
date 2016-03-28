@@ -27,13 +27,11 @@ class govuk::node::s_asset_master (
 
   # daemontools provides setlock
   $cron_requires = [
-    File[
-      '/usr/local/bin/copy-attachments.sh',
-      '/usr/local/bin/process-uploaded-attachments.sh',
-      '/usr/local/bin/virus_scan.sh',
-      '/usr/local/bin/virus-scan-file.sh',
-      '/var/run/virus_scan'
-    ],
+    File['/usr/local/bin/copy-attachments.sh'],
+    File['/usr/local/bin/process-uploaded-attachments.sh'],
+    File['/usr/local/bin/virus_scan.sh'],
+    File['/usr/local/bin/virus-scan-file.sh'],
+    File['/var/run/virus_scan'],
     Package['daemontools'],
   ]
 
@@ -51,29 +49,13 @@ class govuk::node::s_asset_master (
     require => $cron_requires,
   }
 
-  # FIXME: Remove these resources when purged from production
-  cron { 'virus-scan-incoming':
-    ensure => absent,
-    user   => 'assets',
-  }
-  cron { 'virus-scan-incoming-draft':
-    ensure => absent,
-    user   => 'assets',
-  }
-
-  cron { 'rsync-clean':
+  # FIXME: There may be a couple of directories underneath /mnt/uploads that shouldn't be synced.
+  # Over time we should exclude directories once we know they're not required.
+  cron { 'rsync-uploads':
     user    => 'assets',
     hour    => $copy_attachments_hour,
     minute  => '18',
-    command => '/usr/bin/setlock -n /var/run/virus_scan/rsync-clean.lock /usr/local/bin/copy-attachments.sh /mnt/uploads/whitehall/clean',
-    require => $cron_requires,
-  }
-
-  cron { 'rsync-clean-draft':
-    user    => 'assets',
-    hour    => $copy_attachments_hour,
-    minute  => '18',
-    command => '/usr/bin/setlock -n /var/run/virus_scan/rsync-clean.lock /usr/local/bin/copy-attachments.sh /mnt/uploads/whitehall/draft-clean',
+    command => '/usr/bin/setlock -n /var/run/virus_scan/rsync-uploads.lock /usr/local/bin/copy-attachments.sh /mnt/uploads',
     require => $cron_requires,
   }
 

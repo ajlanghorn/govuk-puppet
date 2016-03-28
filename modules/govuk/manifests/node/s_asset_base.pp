@@ -39,7 +39,7 @@ class govuk::node::s_asset_base (
     require => [
       Group['assets'],
       User['assets'],
-      Govuk::Mount['/mnt/uploads']
+      Govuk_mount['/mnt/uploads']
     ],
   }
 
@@ -89,11 +89,6 @@ class govuk::node::s_asset_base (
   file { '/usr/local/bin/virus-scan-file.sh':
     source => 'puppet:///modules/govuk/node/s_asset_base/virus-scan-file.sh',
     mode   => '0755',
-  }
-
-  # FIXME: Remove this resource when the file is purged from production
-  file { '/usr/local/bin/sync-assets.sh':
-    ensure => absent,
   }
 
   cron { 'tmpreaper-bulk-upload-zip-file-tmp':

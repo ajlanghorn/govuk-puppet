@@ -4,10 +4,24 @@ upstream <%= @vhost %>-upstream {
 <%- end -%>
 }
 
+<%- if @error_on_http -%>
+server {
+  server_name <%= @vhost_real %> <%= @aliases.join(" ") unless @aliases.empty? %>;
+  listen 80;
+  return 426 "Request cannot be completed using a plaintext HTTP connection. Retry over HTTPS.\n";
+}
+<%- elsif @https_redirect -%>
+server {
+  server_name <%= @vhost_real %> <%= @aliases.join(" ") unless @aliases.empty? %>;
+  listen 80;
+  rewrite ^/(.*) https://$host/$1 permanent;
+}
+<%- end -%>
+
 server {
   server_name <%= @vhost_real %> <%= @aliases.join(" ") unless @aliases.empty? %>;
 
-  <%- unless @https_only -%>
+  <%- if @https_redirect == false and @error_on_http == false -%>
   listen              80;
   <%- end -%>
   listen              <%= @https_port %> ssl;
@@ -25,6 +39,7 @@ server {
   proxy_set_header X-Real-IP $remote_addr;
   proxy_set_header X-Forwarded-Server $host;
   proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  proxy_set_header X-Forwarded-Proto $scheme;
   proxy_redirect off;
 
   proxy_connect_timeout 1s;

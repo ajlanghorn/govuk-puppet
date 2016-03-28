@@ -24,18 +24,18 @@ class router::gor (
   # once for *every* request/goroutine, and can be quite overwhelming.
   $host_defaults = {
     'ensure'  => $gor_hosts_ensure,
-    'notify'  => 'Class[Govuk::Gor]',
+    'notify'  => 'Class[Govuk_gor]',
     'comment' => 'Used by Gor. See comments in router::gor.',
   }
 
   create_resources('host', $replay_targets, $host_defaults)
 
-  class { 'govuk::gor':
+  class { 'govuk_gor':
     args   => {
       '-input-raw'          => 'localhost:7999',
       '-output-http'        => prefix(keys($replay_targets), 'https://'),
       '-output-http-method' => [
-        'GET', 'HEAD', 'OPTIONS'
+        'GET', 'HEAD', 'OPTIONS',
       ],
     },
     enable => $enabled,

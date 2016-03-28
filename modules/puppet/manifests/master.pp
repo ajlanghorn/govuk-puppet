@@ -34,6 +34,7 @@ class puppet::master(
       Class['unicornherder'],
       Anchor['puppet::master::begin'],
     ],
+    unicorn_port     => $unicorn_port,
   }
   class{'puppet::master::config':
     unicorn_port => $unicorn_port,
@@ -75,11 +76,9 @@ class puppet::master(
   anchor {'puppet::master::end':
     subscribe =>  Class['puppet::master::service'],
     require   =>  [
-                    Class[
-                      'puppet::master::firewall',
-                      'puppet::master::nginx'
-                    ],
+                    Class['puppet::master::firewall'],
+                    Class['puppet::master::nginx'],
                     File['/etc/puppet/gpg'],
-                  ]
+                  ],
   }
 }

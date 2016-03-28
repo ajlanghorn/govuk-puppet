@@ -7,19 +7,18 @@ mod 'camptocamp/augeas', '1.1.0'
 mod 'elasticsearch/elasticsearch'
 mod 'fsalum/redis'
 mod 'maestrodev/wget', '>= 1.1.0'
-mod 'puppetlabs/apt'
+mod 'puppetlabs/apt', '1.8.0'
 mod 'puppetlabs/concat'
 mod 'puppetlabs/gcc'
 mod 'puppetlabs/java_ks'
 mod 'puppetlabs/mysql'
-mod 'puppetlabs/postgresql'
+mod 'puppetlabs/postgresql', '4.1.0'
 mod 'puppetlabs/stdlib', '>= 4.10.0'
-mod 'rjw1/nano'
 mod 'rtyler/jenkins'
 mod 'saz/limits', '2.3.0'
 mod 'saz/memcached'
 mod 'saz/ntp'
-mod 'saz/rsyslog', '2.2.1'
+mod 'saz/rsyslog', '2.3.0'
 mod 'saz/sudo', '3.0.1'
 mod 'saz/timezone'
 mod 'stankevich/python', '1.9.8'
@@ -50,7 +49,7 @@ mod 'gdsoperations/gor',
   :ref => 'v0.2.0'
 mod 'alphagov/harden',
   :git => 'git://github.com/alphagov/puppet-harden.git',
-  :ref => '69bcbb3'
+  :ref => 'v0.2.0'
 mod 'alphagov/puppet-rcs',
   :git => 'git://github.com/alphagov/puppet-rcs.git'
 mod 'elasticsearch/logstash',
@@ -67,7 +66,7 @@ mod 'alphagov/tune_ext',
   :git => 'git://github.com/alphagov/puppet-tune_ext.git'
 
 # Our modules on the Forge.
-mod 'gdsoperations/aptly'
+mod 'gdsoperations/aptly', '0.3.0'
 mod 'gdsoperations/auditd', '0.2.0'
 mod 'gdsoperations/goenv', '0.0.4'
 mod 'gdsoperations/graphite', '~> 2.0.5'

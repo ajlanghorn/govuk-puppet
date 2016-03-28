@@ -20,12 +20,11 @@ namespace :spec do
     # machine classes, and therefore aren't intended to be instantiated directly.
     $nodes_spec_blacklist_classes = %w(
       api_postgresql_base
+      app_server
       asset_base
       base
       postgresql_base
       redis_base
-      ruby_app_server
-      test
       transition_postgresql_base
     )
 
@@ -47,7 +46,7 @@ namespace :spec do
     node_classes = get_node_classes
 
     NUM_PROCESSES = [
-      Facter.value('processors')['count'],
+      Facter.value('processorcount').to_i,
       node_classes.length
     ].min
 

@@ -3,9 +3,12 @@
     name: cdn-configs_Deploy_CDN
     scm:
         - git:
-            url: git@github.gds:gds/cdn-configs
+            url: git@github.com:alphagov/fastly-configure.git
             branches:
               - master
+            wipe-workspace: true
+            clean:
+                after: true
 
 - job:
     name: Deploy_CDN
@@ -13,14 +16,13 @@
     project-type: freestyle
     properties:
         - github:
-            url: https://github.gds/gds/cdn-configs/
+            url: https://github.com/alphagov/fastly-configure/
     scm:
       - cdn-configs_Deploy_CDN
     builders:
         - shell: |
-            cd fastly
-            bundle install --path "${HOME}/bundles/${JOB_NAME}"
-            bundle exec ./deploy_vcl ${vhost} <%= @environment %>
+            export ENVIRONMENT=<%= @environment %>
+            ./jenkins.sh
     wrappers:
         - ansicolor:
             colormap: xterm
@@ -38,9 +40,9 @@
                 - performanceplatform
                 - performanceplatform_admin
                 - performanceplatform_stagecraft
-        - password:
-            name: FASTLY_PASS
-            default: false
         - string:
             name: FASTLY_USER
+            default: false
+        - password:
+            name: FASTLY_PASS
             default: false

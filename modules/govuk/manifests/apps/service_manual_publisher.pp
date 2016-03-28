@@ -32,15 +32,20 @@
 # [*secret_key_base*]
 #   The key for Rails to use when signing/encrypting sessions.
 #
-# [*disable_publishing*]
-#   Disable publishing actions for documents.
-#
 # [*publishing_api_bearer_token*]
 #   The bearer token to use when communicating with Publishing API.
 #   Default: undef
 #
 # [*asset_manager_bearer_token*]
 #   The bearer token to use when communicating with Asset Manager.
+#   Default: undef
+#
+# [*http_username*]
+#   The http basic auth username when running on integration.
+#   Default: undef
+#
+# [*http_password*]
+#   The http basic auth password when running on integration.
 #   Default: undef
 #
 class govuk::apps::service_manual_publisher(
@@ -53,9 +58,10 @@ class govuk::apps::service_manual_publisher(
   $oauth_secret = '',
   $port = 3111,
   $secret_key_base = undef,
-  $disable_publishing = false,
   $publishing_api_bearer_token = undef,
   $asset_manager_bearer_token = undef,
+  $http_username = undef,
+  $http_password = undef,
 ) {
 
   include govuk_postgresql::client #installs libpq-dev package needed for pg gem
@@ -63,10 +69,11 @@ class govuk::apps::service_manual_publisher(
   $app_name = 'service-manual-publisher'
 
   govuk::app { $app_name:
-    app_type          => 'rack',
-    port              => $port,
-    vhost_ssl_only    => true,
-    health_check_path => '/healthcheck',
+    app_type           => 'rack',
+    log_format_is_json => true,
+    port               => $port,
+    vhost_ssl_only     => true,
+    health_check_path  => '/healthcheck',
   }
 
   Govuk::App::Envvar {
@@ -89,14 +96,12 @@ class govuk::apps::service_manual_publisher(
     "${title}-ASSET_MANAGER_BEARER_TOKEN":
       varname => 'ASSET_MANAGER_BEARER_TOKEN',
       value   => $asset_manager_bearer_token;
-  }
-
-  if $disable_publishing {
-    govuk::app::envvar {
-      "${title}-DISABLE_PUBLISHING":
-        varname => 'DISABLE_PUBLISHING',
-        value   => '1';
-    }
+    "${title}-HTTP_USERNAME":
+      varname => 'HTTP_USERNAME',
+      value   => $http_username;
+    "${title}-HTTP_PASSWORD":
+      varname => 'HTTP_PASSWORD',
+      value   => $http_password;
   }
 
   if $secret_key_base != undef {

@@ -1,6 +1,21 @@
+# == Class: govuk::apps::whitehall
 #
-# [$prevent_single_host] - This manifest will deliberately fail if the frontend and admin are on the same machine
-#                          and this flag is not set in hiera
+# Configure the whitehall application
+#
+# === Parameters
+#
+# FIXME: Document all class parameters
+#
+# [*prevent_single_host*]
+#   This manifest will deliberately fail if the frontend and admin are on the
+#   same machine and this flag is not set in hiera
+#
+# [*nagios_memory_warning*]
+#   Memory use at which Nagios should generate a warning.
+#
+# [*nagios_memory_critical*]
+#   Memory use at which Nagios should generate a critical alert.
+#
 class govuk::apps::whitehall(
   $vhost = 'whitehall',
   $port = '3020',
@@ -56,7 +71,7 @@ class govuk::apps::whitehall(
         proxy_set_header Host 'whitehall-admin.${app_domain}';
         proxy_pass https://whitehall-admin.${app_domain};
       }
-      "
+      ",
     }
   }
 
@@ -147,16 +162,16 @@ class govuk::apps::whitehall(
       location /healthcheck/overdue {
         try_files $uri @app;
       }
-    '
+    ',
     }
 
-    govuk::logstream { 'whitehall_scheduled_publishing_json_log':
+    govuk_logging::logstream { 'whitehall_scheduled_publishing_json_log':
       logfile => '/var/apps/whitehall/log/production_scheduled_publishing.json.log',
       fields  => {'application' => 'whitehall'},
       json    => true,
     }
 
-    govuk::logstream { 'whitehall_sidekiq_json_log':
+    govuk_logging::logstream { 'whitehall_sidekiq_json_log':
       logfile => '/var/apps/whitehall/log/sidekiq.json.log',
       fields  => {'application' => 'whitehall-sidekiq'},
       json    => true,
@@ -183,11 +198,11 @@ class govuk::apps::whitehall(
         varname => 'GOVUK_ASSET_ROOT',
         value   => "//whitehall-admin.${app_domain}";
     }
+  }
 
-    govuk::app::envvar { "${title}-PUBLISHING_API_BEARER_TOKEN":
-      app     => 'whitehall',
-      varname => 'PUBLISHING_API_BEARER_TOKEN',
-      value   => $publishing_api_bearer_token,
-    }
+  govuk::app::envvar { "${title}-PUBLISHING_API_BEARER_TOKEN":
+    app     => 'whitehall',
+    varname => 'PUBLISHING_API_BEARER_TOKEN',
+    value   => $publishing_api_bearer_token,
   }
 }

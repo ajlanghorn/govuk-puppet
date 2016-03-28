@@ -41,7 +41,6 @@ govuk::node::s_development::apps:
   - 'efg'
   - 'email_alert_api'
   - 'email_alert_frontend'
-  - 'email_alert_monitor'
   - 'email_alert_service'
   - 'email_alert_service::rabbitmq'
   - 'email_alert_service::rabbitmq_test_permissions'
@@ -78,8 +77,10 @@ govuk::node::s_development::apps:
   - 'router'
   - 'router_api'
   - 'rummager'
+  - 'rummager::rabbitmq'
   - 'search_admin'
   - 'service_manual_publisher'
+  - 'share_sale_publisher'
   - 'short_url_manager'
   - 'signon'
   - 'smartanswers'
@@ -107,19 +108,14 @@ govuk::apps::authenticating_proxy::mongodb_name: 'authenticating_proxy_developme
 govuk::apps::authenticating_proxy::mongodb_nodes: ['localhost']
 govuk::apps::authenticating_proxy::govuk_upstream_uri: 'http://government-frontend.dev.gov.uk'
 govuk::apps::backdrop_write::enable_procfile_worker: false
-govuk::apps::collections::vhost: 'collections'
 govuk::apps::collections_publisher::enable_procfile_worker: false
 govuk::apps::contacts::extra_aliases: ['contacts-frontend-old', 'contacts-admin']
-govuk::apps::contacts_frontend::vhost: 'contacts-frontend'
 govuk::apps::content_register::enable_procfile_worker: false
 govuk::apps::content_register::rabbitmq::configure_test_details: true
 govuk::apps::content_register::rabbitmq_hosts: ['localhost']
 govuk::apps::content_store::mongodb_nodes: ['localhost']
 govuk::apps::content_store::mongodb_name: 'content_store_development'
-govuk::apps::content_store::vhost: 'content-store'
 govuk::apps::email_alert_api::enable_procfile_worker: false
-govuk::apps::email_alert_frontend::vhost: 'email-alert-frontend'
-govuk::apps::email_alert_monitor::enabled: true
 govuk::apps::email_campaign_api::mongodb_name: 'email_campaign_api_development'
 govuk::apps::email_campaign_api::mongodb_nodes: ['localhost']
 govuk::apps::email_alert_service::rabbitmq_hosts: ['localhost']
@@ -128,14 +124,10 @@ govuk::apps::event_store::mongodb_servers: ['localhost']
 govuk::apps::frontend::enable_homepage_nocache_location: false
 govuk::apps::hmrc_manuals_api::allow_unknown_hmrc_manual_slugs: true
 govuk::apps::hmrc_manuals_api::enable_procfile_worker: false
-govuk::apps::government_frontend::vhost: 'government-frontend'
 govuk::apps::govuk_cdn_logs_monitor::enabled: false
 govuk::apps::govuk_delivery::enable_procfile_worker: false
 govuk::apps::imminence::enable_procfile_worker: false
 govuk::apps::licencefinder::mongodb_nodes: ['localhost']
-govuk::apps::manuals_frontend::vhost: 'manuals-frontend'
-govuk::apps::mapit::enabled: true
-govuk::apps::multipage_frontend::vhost: 'multipage-frontend'
 govuk::apps::multipage_frontend::enabled: true
 govuk::apps::need_api::mongodb_name: 'govuk_needs_development'
 govuk::apps::need_api::mongodb_nodes: ['localhost']
@@ -160,22 +152,24 @@ govuk::apps::router::vhost_aliases: ["www"]
 govuk::apps::router_api::mongodb_name: 'router'
 govuk::apps::router_api::mongodb_nodes: ['localhost']
 govuk::apps::router_api::router_nodes: ['localhost:3055']
-govuk::apps::router_api::vhost: 'router-api'
 govuk::apps::rummager::enable_procfile_worker: false
+govuk::apps::rummager::rabbitmq_hosts: ['localhost']
+govuk::apps::share_sale_publisher::enabled: true
+govuk::apps::share_sale_publisher::mongodb_nodes: ['localhost']
+govuk::apps::share_sale_publisher::mongodb_name: 'share_sale_publisher_development'
 govuk::apps::signon::enable_procfile_worker: false
 govuk::apps::signon::redis_url: redis://localhost:6379/0
 govuk::apps::smartanswers::expose_govspeak: true
-govuk::apps::specialist_frontend::vhost: 'specialist-frontend'
 govuk::apps::specialist_publisher::enable_procfile_worker: false
 govuk::apps::specialist_publisher::publish_pre_production_finders: true
 govuk::apps::stagecraft::worker::enabled: true
 govuk::apps::stagecraft::beat::enabled: true
 govuk::apps::stagecraft::celerycam::enabled: true
-govuk::apps::static::vhost: 'static'
 govuk::apps::support::enable_procfile_worker: false
 govuk::apps::support_api::enable_procfile_worker: false
 govuk::apps::tariff_api::enable_procfile_worker: false
 govuk::apps::transition::enable_procfile_worker: false
+govuk::apps::travel_advice_publisher::enable_email_alerts: true
 govuk::apps::whitehall::configure_admin: true
 govuk::apps::whitehall::configure_frontend: true
 govuk::apps::whitehall::enable_procfile_worker: false
@@ -186,25 +180,24 @@ govuk::deploy::config::errbit_environment_name: 'development'
 govuk::deploy::config::govuk_env: 'development'
 govuk::deploy::setup_actionmailer_ses_config: false
 
-govuk::lvm::no_op: true
+govuk_lvm::no_op: true
 
-govuk::logstream::disabled: true
-
-govuk::mount::no_op: true
+govuk_mount::no_op: true
 
 govuk_elasticsearch::version: '1.4.4'
 
+govuk_logging::logstream::disabled: true
+
 govuk_mysql::server::slow_query_log: true
 
-govuk_postgresql::monitoring::user: username
 govuk_postgresql::monitoring::password: password
 govuk_postgresql::server::configure_env_sync_user: false
 govuk_postgresql::server::snakeoil_ssl_certificate: certificate
 govuk_postgresql::server::snakeoil_ssl_key: key
 
-govuk::ppa::path: preview
+govuk_ppa::path: preview
 
-govuk::sshkeys::development_keys:
+govuk_sshkeys::development_keys:
   jumpbox.integration.publishing.service.gov.uk:
     key: "AAAAB3NzaC1yc2EAAAADAQABAAABAQDLRdHg/Ae3XZy2f7o2PMJIDQznrE7FjWyzC1MIvL1dDDKhcG+ht+IH05w3eUCuMQVj8t5Wihpp/oB8Fm/+d15xJQtW3oIggE34KMADYN3M00anaod+GhdKubOnFQRF/wtX0/CPdt/isuWdGweudKSwse4rV4U7aaTD+sb1co8tIGfpQNtnI1nEg0rjSe4DSw1FT9gzmkrISj3yECcA0OMvAFlxorRY4WzWajCW2tfxGRdBA7jpzMTpMy1nmuj6YXcvmpzkegu1IioxH5H6YosBxOd2i7gq89YDEMkWRM/8u+hMF77jV9kO+4zbKDo95UUyH87TKSlG1iU4A/8MLMT7"
     host_aliases: "31.210.245.102"
@@ -226,6 +219,10 @@ govuk::sshkeys::development_keys:
     key: "AAAAB3NzaC1yc2EAAAADAQABAAABAQC9HNlTkds39z2D7a41hJwcQog/Y0OuNNKV35V+hWSG9QS3GjFK5IHK75zCO/HzeRzJqdtaFiyiraNz1HjR5MHnJEj4mDaFbuKqcQfBG6qDTTVCJbRFZj3LfDSB7g/7GxVOx1xCfTSPqMyuMdBdWFptVplAEWenelNNHw6CGs92TtZNeZdhbFdLzCSK+Ou1SArbO5EvAGNxJZXJWTu7jqXNPNJvveZ5/nrcphOV8PdFjFCJjk+R7yRCETRrXOiS7OP2UjeDRrpLLoltJyXWEH9u/CyvLwfKB0t8TBth4LoBYvMmrzEaTYOuonuHaiA8zkdCmxzZ/PunwqRgOomHNa1X"
   whitehall-mysql-backup-1.backend.integration:
     key: "AAAAB3NzaC1yc2EAAAADAQABAAABAQCvYDHGv5HGn+0UkNySdJKIEfj+dhLA7bE7+jnantWsit7EdzEupG1AffmZxL4fOnKubwclA/ZkeC8/HtTp3ZsM9rmBsyYQLlY3ZRotcPxwLadLHtXGjq71nKbikFafjA1f7NVa0yRqFuHHrcQyzAsfmN1QWP/IaSwUWRI72XlSs+QTuX0NPlhLkJ548ltIXxwUgT/EdXCVA3ZrIrt6KddeKQ5enxB0qqCqoMt4iHIDadSXcfFoT7Y9xSeDZ+vURHll2knuNY2wKncytq3XcYMYey2Ke44CQjRL4GfasoS6DYUqCR2QSzKhWm83zXiYIP0uP4RMpjjwlJFJn/hQtWuX"
+
+govuk_unattended_reboot::enabled: false
+govuk_unattended_reboot::mongodb::enabled: false
+govuk_unattended_reboot::elasticsearch::enabled: false
 
 hosts::development::apps:
   - 'asset-manager'
@@ -251,7 +248,6 @@ hosts::development::apps:
   - 'draft-content-store'
   - 'efg'
   - 'email-alert-api'
-  - 'email-alert-monitor'
   - 'email-alert-frontend'
   - 'email-campaign-api'
   - 'email-campaign-frontend'
@@ -290,6 +286,7 @@ hosts::development::apps:
   - 'search-admin'
   - 'service-manual'
   - 'service-manual-publisher'
+  - 'share-sale-publisher'
   - 'short-url-manager'
   - 'signon'
   - 'smartanswers'

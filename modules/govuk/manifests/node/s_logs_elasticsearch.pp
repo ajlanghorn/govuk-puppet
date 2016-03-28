@@ -26,12 +26,12 @@ class govuk::node::s_logs_elasticsearch(
     minimum_master_nodes => '2',
     host                 => $::fqdn,
     log_index_type_count => {
-      'logs-current' => ['syslog']
+      'logs-current' => ['syslog'],
     },
     disable_gc_alerts    => true,
     require              => [
       Class['govuk_java::openjdk7::jre'],
-      Govuk::Mount['/mnt/elasticsearch']
+      Govuk_mount['/mnt/elasticsearch']
     ],
   }
 
@@ -86,7 +86,7 @@ class govuk::node::s_logs_elasticsearch(
       require => [
         Class['govuk_elasticsearch::estools'],
         File['/usr/local/bin/es-rotate-passive-check'],
-      ]
+      ],
     }
   } else {
     cron { 'elasticsearch-rotate-indices':
@@ -103,5 +103,5 @@ class govuk::node::s_logs_elasticsearch(
     host_name => $::fqdn,
   }
 
-  Govuk::Mount['/mnt/elasticsearch'] -> Class['govuk_elasticsearch']
+  Govuk_mount['/mnt/elasticsearch'] -> Class['govuk_elasticsearch']
 }

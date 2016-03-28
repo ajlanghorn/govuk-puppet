@@ -24,28 +24,12 @@ backup::assets::jobs:
     minute: 13
     user: 'root'
     gpg_key_id: *offsite_gpg_key
+    pre_command: "export PASSPHRASE=%{hiera('backup::assets::backup_private_gpg_key_passphrase')}"
 
 backup::offsite::dest_host: *offsite_host
 backup::offsite::dest_host_key: *offsite_ssh_host_key
 backup::offsite::enable: true
-backup::offsite::jobs:
-  'govuk-datastores':
-    sources:
-      - '/data/backups/*/var/lib/automongodbbackup/latest'
-      - '/data/backups/*/var/lib/automysqlbackup/latest.tbz2'
-      - '/data/backups/*/var/lib/autopostgresqlbackup/latest.tbz2'
-      - '/data/backups/archived'
-    destination: "rsync://%{hiera('backup::offsite::dest_host')}//srv/backup-data/"
-    hour: 8,
-    minute: 13,
-    gpg_key_id: *offsite_gpg_key
-  'govuk-graphite':
-    sources: '/data/backups/*/opt/graphite/storage/whisper'
-    destination: "rsync://%{hiera('backup::offsite::dest_host')}//srv/backup-graphite/"
-    weekday: 6
-    hour: 8,
-    minute: 13,
-    # No encryption because of size and sensitivity
+
 backup::offsite::monitoring::offsite_fqdn: *offsite_host
 backup::offsite::monitoring::offsite_hostname: 'backup0.provider0'
 
@@ -55,13 +39,12 @@ environment_ip_prefix: '10.3'
 
 govuk::apps::content_register::db::backend_ip_range: '10.3.3.0/24'
 govuk::apps::email_alert_api::db::backend_ip_range: '10.3.3.0/24'
-govuk::apps::email_alert_monitor::db::backend_ip_range: '10.3.3.0/24'
 govuk::apps::errbit::errbit_email_from: 'govuk-winston+errbit-production@digital.cabinet-office.gov.uk'
 govuk::apps::hmrc_manuals_api::publish_topics: false
-govuk::apps::panopticon::enable_procfile_worker: false
 govuk::apps::publicapi::backdrop_host: 'www.performance.service.gov.uk'
 govuk::apps::publisher::data_import_passive_check: true
-govuk::apps::service_manual_publisher::disable_publishing: true
+govuk::apps::rummager::aws_s3_bucket_name: govuk-api-elasticsearch-snapshots-production
+govuk::apps::travel_advice_publisher::enable_email_alerts: true
 
 govuk::deploy::actionmailer_enable_delivery: true
 
@@ -81,9 +64,9 @@ govuk_jenkins::config::banner_string: 'Carrenza PRODUCTION'
 govuk_jenkins::config::manage_config: true
 
 govuk_jenkins::job_builder::environment: 'production'
-govuk_jenkins::job_builder::manage_jobs: true
 
 govuk_jenkins::job_builder::jobs:
+  - govuk_jenkins::job::bouncer_cdn
   - govuk_jenkins::job::build_offsite_backup
   - govuk_jenkins::job::check_cdn_ip_ranges
   - govuk_jenkins::job::ci_network_config
@@ -96,7 +79,7 @@ govuk_jenkins::job_builder::jobs:
   - govuk_jenkins::job::deploy_licensify
   - govuk_jenkins::job::deploy_puppet
   - govuk_jenkins::job::deploy_router_data
-  - govuk_jenkins::job::fetch_prototype_taxonomy_data
+  - govuk_jenkins::job::email_alert_check
   - govuk_jenkins::job::gds_production_backup
   - govuk_jenkins::job::govuk_cdn_nightly_2xx_status_collection
   - govuk_jenkins::job::launch_vms
@@ -104,8 +87,8 @@ govuk_jenkins::job_builder::jobs:
   - govuk_jenkins::job::network_config_deploy
   - govuk_jenkins::job::passive_checks
   - govuk_jenkins::job::performance_platform_smokey
-  - govuk_jenkins::job::bouncer_cdn
   - govuk_jenkins::job::run_govuk_complaint_rate_report
+  - govuk_jenkins::job::run_rake_task
   - govuk_jenkins::job::run_whitehall_data_migrations
   - govuk_jenkins::job::search_fetch_analytics_data
   - govuk_jenkins::job::service_manual_rebuild_search_index
@@ -117,6 +100,7 @@ govuk_jenkins::job_builder::jobs:
   - govuk_jenkins::job::transition_load_site_config
   - govuk_jenkins::job::transition_load_transition_stats_hits
   - govuk_jenkins::job::trigger_data_sync_complete
+  - govuk_jenkins::job::update_cdn_dictionaries
   - govuk_jenkins::job::whitehall_rebuild_elasticsearch_index
   - govuk_jenkins::job::whitehall_run_broken_link_checker
 
@@ -126,14 +110,13 @@ govuk_jenkins::job::network_config_deploy::environments:
   - 'skyscape-production'
 
 govuk_jenkins::job::performance_platform_smokey::pp_full_app_domain: "production.performance.service.gov.uk"
-govuk_jenkins::job::performance_platform_smokey::pp_auth_domain: "performance.service.gov.uk"
+govuk_jenkins::job::performance_platform_smokey::pp_app_domain: "performance.service.gov.uk"
 
 govuk_jenkins::job::smokey::build_branch: 'master'
 
 govuk_jenkins::ssh_key::public_key: 'AAAAB3NzaC1yc2EAAAADAQABAAACAQCfPjubgzCkZo1aTPlkgeXb1eh3IonRBRptx0qLMCjOV+e+M8uRAT/Xx3ydJYPd7sOgZDyx2xjSGb7Eefau0jSUAcMD1Xd01SXWBQPJRDfPmQLrdbM0xxOFH8nft39uo4Mz6ccZc34xrudL6q/urp732HZHYwltnNnbk9h58n1QIhemRtN3u9RrSSOILqw/F42S6Aj8lZ1v/DGgfc6F5pKyJ7TByHL1RlqwpZHbEjYYuvK0ZJJsKPlyVPbNDsX7UEYWwbpPsFs9LPvCC6epmj+7Lv25bTU8rKK8J3rNWa1FybpWS0VXbF/+mrLjtT0/vwvbwUzsjK6dSUsbEsBEn+cOqomxCYkLjMzUy1+ReYAh6+CjmzutPs1g4OjQRel2ONprhPTEsNUu+oNObnGDOUpzHK10ntAZxguA4QEUmOBBWfxuQhmJO60/b1zedCcc7MR8e9S0y4jtpXa8GBCe40+napArZTW9QXlHLWz+khkYQfO107Q+z1QaLFojdcrHlUfpqAc6DtVJQu7tsBt2vXTn0qq6mU5Eg6UY+X1l/3gWdFS3ZEvCUoGK6bLU3i50jZ1xsFogFFfvSux46S1DYW2Fk8a/2IBBdcQcL1YoM73jiAQgpU8Vs50wtk4mWhK1yBaMYmMAeL7mKFbJla7SjTAwaDdo5uezyrJlbZxqTb/Y3w=='
 
 govuk_mysql::server::innodb_buffer_pool_size_proportion: '0.5'
-govuk_mysql::server::innodb_file_per_table: true
 
 govuk::node::s_api_lb::api_servers:
   - "api-1.api"
@@ -143,12 +126,15 @@ govuk::node::s_api_lb::content_store_servers:
   - "content-store-2.api"
   - "content-store-3.api"
 govuk::node::s_api_lb::draft_content_store_servers:
-- "draft-content-store-1.api"
-- "draft-content-store-2.api"
+  - "draft-content-store-1.api"
+  - "draft-content-store-2.api"
 govuk::node::s_api_lb::email_campaign_api_servers:
   - "email-campaign-api-1.api"
   - "email-campaign-api-2.api"
   - "email-campaign-api-3.api"
+govuk::node::s_api_lb::mapit_servers:
+  - "mapit-1.api"
+  - "mapit-2.api"
 govuk::node::s_api_lb::search_servers:
   - "search-1.api"
   - "search-2.api"
@@ -156,7 +142,6 @@ govuk::node::s_api_lb::search_servers:
 
 govuk::node::s_apt::real_ip_header: 'True-Client-Ip'
 govuk::node::s_asset_base::firewall_allowed_ip_range: '10.3.3.0/24'
-govuk::node::s_asset_slave::offsite_backups: true
 govuk::node::s_backend_lb::backend_servers:
   - 'backend-1.backend'
   - 'backend-2.backend'
@@ -178,6 +163,9 @@ govuk::node::s_frontend_lb::calculators_frontend_servers:
   - 'calculators-frontend-1.frontend'
   - 'calculators-frontend-2.frontend'
   - 'calculators-frontend-3.frontend'
+govuk::node::s_frontend_lb::draft_email_campaign_frontend_servers:
+  - 'draft-email-campaign-frontend-1.frontend'
+  - 'draft-email-campaign-frontend-2.frontend'
 govuk::node::s_frontend_lb::draft_frontend_servers:
   - 'draft-frontend-1.frontend'
   - 'draft-frontend-2.frontend'
@@ -237,7 +225,6 @@ govuk_crawler::ssh_keys:
     key: 'AAAAB3NzaC1yc2EAAAADAQABAAABAQDHi69quH4i1jY4uVLuIYOoUi7yc+6/fJjDKJciWIIgyH1rCSGtTXrfcJQHQKxKEyndQ+LoUs8krImD9CtzQTvoqdXYKu+XgpjqiZ5HfQhx55ZoMCXnx9vqCwGtx2LwH4PaBZRvsNJbbY+sG3W13eXkgwQnIcI2FgGpDDJQ9lfxSNzt6jMJQuvAhhDrKtZEsA56AznPIRd1mIHmuZ6gILBzJmDw5EIpqQhSb4+NrNTNnGxHyFkZISTMG0mx9lRtlyS1SMZVoPJQbShSEScKMXRlacrpkiNOTvrGDrhsLjTUtT5g1bo4XMFRubReAwFCeTZI0Qv1Bvpzj8V9c8B4+p6b'
     type: 'ssh-rsa'
 
-hosts::production::carrenza_vcloud: true
 hosts::production::ip_api_lb: '10.3.4.254'
 hosts::production::ip_backend_lb: '10.3.3.254'
 hosts::production::ip_bouncer: '37.26.90.219'
@@ -303,6 +290,10 @@ hosts::production::api::hosts:
     ip: '10.3.4.54'
   email-campaign-mongo-3:
     ip: '10.3.4.55'
+  mapit-1:
+    ip: '10.3.4.60'
+  mapit-2:
+    ip: '10.3.4.61'
   performance-mongo-1:
     ip: '10.3.4.31'
   performance-mongo-2:
@@ -452,6 +443,10 @@ hosts::production::frontend::hosts:
     ip: '10.3.2.3'
   frontend-3:
     ip: '10.3.2.4'
+  draft-email-campaign-frontend-1:
+    ip: '10.3.2.202'
+  draft-email-campaign-frontend-2:
+    ip: '10.3.2.203'
   draft-frontend-1:
     ip: '10.3.2.200'
   draft-frontend-2:
@@ -615,9 +610,6 @@ monitoring::contacts::slack_username: 'Production Icinga'
 monitoring::contacts::slack_alert_url: "https://alert.%{hiera('app_domain')}/cgi-bin/icinga/status.cgi"
 monitoring::edge::enabled: true
 monitoring::pagerduty_drill::enabled: true
-
-# FIXME: Remove this line to enable after testing completed in Integration
-monitoring::checks::vpn_tunnels::enabled: false
 
 postfix::smarthost:
   - 'email-smtp.us-east-1.amazonaws.com:587'

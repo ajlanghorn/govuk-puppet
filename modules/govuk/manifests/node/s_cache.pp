@@ -37,7 +37,7 @@ class govuk::node::s_cache (
   $enable_authenticating_proxy = false,
 ) inherits govuk::node::s_base {
 
-  include govuk::htpasswd
+  include govuk_htpasswd
   include router::gor
 
   class { 'nginx':
@@ -57,8 +57,8 @@ class govuk::node::s_cache (
     real_ip_header  => $real_ip_header,
   }
 
-  # Set the varnish storage size to 75% of memory - 1024
-  $varnish_storage_size_pre = floor($::memorysize_mb / 4 * 3 - 1024)
+  # The storage size for the cache, excluding per object and static overheads
+  $varnish_storage_size_pre = floor($::memorysize_mb * 0.70 - 1024)
 
   # Ensure that there's some varnish storage in small environments (eg, vagrant).
   if $varnish_storage_size_pre < 100 {
@@ -85,7 +85,7 @@ class govuk::node::s_cache (
   }
 
   if $enable_authenticating_proxy {
-    include govuk::node::s_ruby_app_server
+    include govuk::node::s_app_server
     class { 'govuk::apps::authenticating_proxy':
       govuk_upstream_uri => 'http://localhost:3054',
     }

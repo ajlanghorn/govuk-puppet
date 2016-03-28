@@ -15,7 +15,7 @@ describe 'govuk_crawler', :type => :class do
   it { is_expected.to contain_file('/foo/error') }
 
   it {
-    # Leaky abstraction? We need to know that govuk::user creates the
+    # Leaky abstraction? We need to know that govuk_user creates the
     # parent directory for our file.
     is_expected.to contain_file('/home/govuk-crawler/.ssh').with_ensure('directory')
   }
@@ -26,7 +26,7 @@ describe 'govuk_crawler', :type => :class do
 
   describe "seed_enable" do
     context "false (default)" do
-      it { is_expected.to contain_cron('seed-crawler').with_ensure('absent') }
+      it { is_expected.to contain_file('/etc/cron.d/seed-crawler').with_ensure('absent') }
     end
 
     context "true" do
@@ -36,7 +36,7 @@ describe 'govuk_crawler', :type => :class do
         })
       }
 
-      it { is_expected.to contain_cron('seed-crawler').with_ensure('present') }
+      it { is_expected.to contain_file('/etc/cron.d/seed-crawler').with_ensure('present') }
     end
   end
 

@@ -1,4 +1,27 @@
-# FIXME: This class needs better documentation as per https://docs.puppetlabs.com/guides/style_guide.html#puppet-doc
+# == Class: govuk::node::s_backend_lb
+#
+# Sets up a backend loadbalancer
+#
+# === Parameters
+#
+# [*perfplat_public_app_domain*]
+#   The public application domain for the Performance Platform
+#
+# [*backend_servers*]
+#   An array of backend app servers
+#
+# [*mapit_servers*]
+#   An array of mapit servers
+#
+# [*performance_backend_servers*]
+#   An array of Performance Platform backend app servers
+#
+# [*whitehall_backend_servers*]
+#   An array of whitehall backend app servers
+#
+# [*maintenance_mode*]
+#   Whether the backend should be taken offline in nginx
+#
 class govuk::node::s_backend_lb (
   $perfplat_public_app_domain = 'performance.service.gov.uk',
   $backend_servers,
@@ -14,19 +37,21 @@ class govuk::node::s_backend_lb (
   $app_domain = hiera('app_domain')
 
   Loadbalancer::Balance {
-    servers => $backend_servers,
     maintenance_mode => $maintenance_mode,
   }
 
   loadbalancer::balance {
+    [
+      'hmrc-manuals-api',
+    ]:
+      error_on_http => true,
+      servers       => $backend_servers;
     [
       'business-support-api',
       'collections-publisher',
       'contacts-admin',
       'content-register',
       'content-tagger',
-      'email-alert-monitor',
-      'hmrc-manuals-api',
       'imminence',
       'maslow',
       'panopticon',
@@ -36,6 +61,7 @@ class govuk::node::s_backend_lb (
       'release',
       'search-admin',
       'service-manual-publisher',
+      'share-sale-publisher',
       'signon',
       'specialist-publisher',
       'short-url-manager',
@@ -44,7 +70,7 @@ class govuk::node::s_backend_lb (
       'travel-advice-publisher',
       'transition',
     ]:
-      https_only => false; # FIXME: Remove for #51136581
+      servers => $backend_servers;
     [
       'asset-manager',
       'canary-backend',
@@ -57,34 +83,32 @@ class govuk::node::s_backend_lb (
       'support-api',
       'tariff-api',
     ]:
-      https_only    => false, # FIXME: Remove for #51136581
-      internal_only => true;
+      https_redirect => false, # FIXME: Remove for #51136581
+      internal_only  => true,
+      servers        => $backend_servers;
     'whitehall-admin':
-      https_only => false, # FIXME: Remove for #51136581
-      servers    => $whitehall_backend_servers;
+      servers => $whitehall_backend_servers;
   }
 
   loadbalancer::balance { 'errbit':
-    servers    => $errbit_servers,
-    https_only => false, # FIXME: Remove for #51136581
+    servers => $errbit_servers,
   }
 
   loadbalancer::balance { 'kibana':
     read_timeout => 5,
-    https_only   => false, # FIXME: Remove for #51136581
+    servers      => $backend_servers,
   }
 
   loadbalancer::balance { 'mapit':
     servers       => $mapit_servers,
     internal_only => true,
-    https_only    => false, # FIXME: Remove for #51136581
   }
 
   if !empty($performance_backend_servers) {
     loadbalancer::balance { 'performanceplatform-admin':
-      servers       => $performance_backend_servers,
-      internal_only => false,
-      https_only    => true,
+      servers        => $performance_backend_servers,
+      internal_only  => false,
+      https_redirect => true,
     }
   }
 
